@@ -1,0 +1,322 @@
+{
+ "version": 4,
+ "generator": "tools/car-generator",
+ "units": "Meter, +Y oben, +Z vorne, +X links",
+ "sharedTextures": "textures/",
+ "sharedTextureBytes": 645116,
+ "cars": [
+  {
+   "id": "vektra_gt",
+   "name": "Vektra GT",
+   "file": "vektra_gt.glb",
+   "description": "Mittelmotor-Sportwagen mit V8, Heckantrieb, agil und präzise",
+   "class": "Supersportwagen",
+   "brand": "VEKTRA",
+   "defaultPaint": "#c8102e",
+   "defaultAccent": "#00e5ff",
+   "defaultRim": "#1d1f23",
+   "defaultCaliper": "#f0b400",
+   "dimensions": {
+    "length": 4.45,
+    "width": 1.965,
+    "height": 1.154
+   },
+   "wheelbase": 2.7,
+   "wheels": [
+    {
+     "node": "Wheel_FL",
+     "caliper": "Caliper_FL",
+     "position": [
+      0.827,
+      0.33,
+      1.38
+     ],
+     "radius": 0.33,
+     "width": 0.25,
+     "steer": true,
+     "drive": false
+    },
+    {
+     "node": "Wheel_FR",
+     "caliper": "Caliper_FR",
+     "position": [
+      -0.827,
+      0.33,
+      1.38
+     ],
+     "radius": 0.33,
+     "width": 0.25,
+     "steer": true,
+     "drive": false
+    },
+    {
+     "node": "Wheel_RL",
+     "caliper": "Caliper_RL",
+     "position": [
+      0.8141,
+      0.355,
+      -1.32
+     ],
+     "radius": 0.355,
+     "width": 0.31,
+     "steer": false,
+     "drive": true
+    },
+    {
+     "node": "Wheel_RR",
+     "caliper": "Caliper_RR",
+     "position": [
+      -0.8141,
+      0.355,
+      -1.32
+     ],
+     "radius": 0.355,
+     "width": 0.31,
+     "steer": false,
+     "drive": true
+    }
+   ],
+   "stats": {
+    "massKg": 1380,
+    "powerKw": 470,
+    "drive": "RWD",
+    "topSpeedKmh": 325,
+    "grip": 1.1,
+    "suspension": "straff"
+   },
+   "physics": {
+    "massKg": 1380,
+    "cogHeight": 0.42,
+    "weightFront": 0.42,
+    "dragCd": 0.31,
+    "frontalArea": 1.92,
+    "powerKw": 470,
+    "torqueNm": 700,
+    "idleRpm": 950,
+    "redlineRpm": 8500,
+    "gears": [
+     3.13,
+     2.19,
+     1.69,
+     1.35,
+     1.11,
+     0.92,
+     0.76
+    ],
+    "finalDrive": 4.1,
+    "suspension": {
+     "springFront": 54000,
+     "springRear": 61000,
+     "damping": 0.42,
+     "travel": 0.1,
+     "antiRollFront": 0.85,
+     "antiRollRear": 0.7
+    },
+    "tire": {
+     "grip": 1.1,
+     "slipPeak": 0.09
+    },
+    "brakeForce": 1.3,
+    "brakeBias": 0.62,
+    "steerLockDeg": 31
+   },
+   "tuning": {
+    "engine": [
+     {
+      "name": "Serie V8",
+      "powerKw": 470,
+      "torqueNm": 700
+     },
+     {
+      "name": "Carbon-Ansaugung",
+      "powerKw": 500,
+      "torqueNm": 735
+     },
+     {
+      "name": "Biturbo",
+      "powerKw": 560,
+      "torqueNm": 805
+     },
+     {
+      "name": "Race + Dachhutze",
+      "powerKw": 610,
+      "torqueNm": 845
+     }
+    ],
+    "exhaust": [
+     {
+      "name": "Serie",
+      "loudness": 0
+     },
+     {
+      "name": "Sport (4 Rohre)",
+      "loudness": 4
+     },
+     {
+      "name": "Race (Titan, mittig)",
+      "loudness": 8
+     }
+    ],
+    "cage": [
+     {
+      "name": "Kein Käfig"
+     },
+     {
+      "name": "Halbkäfig",
+      "massKg": 16,
+      "stiffness": 1.05
+     },
+     {
+      "name": "Vollkäfig",
+      "massKg": 30,
+      "stiffness": 1.12
+     }
+    ]
+   },
+   "plate": "VK 77",
+   "gauges": {
+    "speedMaxKmh": 340,
+    "rpmMaxThousand": 9,
+    "sweepDeg": 270,
+    "cluster": "digital",
+    "center": "dash",
+    "rearScreens": false
+   },
+   "cockpit": {
+    "eye": [
+     0.33,
+     0.966,
+     -0.225
+    ],
+    "steeringWheel": [
+     0.33,
+     0.666,
+     0.395
+    ],
+    "steeringRatioDeg": 400
+   },
+   "lights": {
+    "head": [
+     [
+      0.6,
+      0.462,
+      2.161
+     ]
+    ],
+    "tail": [
+     [
+      0.585,
+      0.768,
+      -2.131
+     ],
+     [
+      0.0,
+      0.792,
+      -2.126
+     ]
+    ],
+    "fog": [
+     [
+      0.735,
+      0.305,
+      -2.113
+     ]
+    ]
+   },
+   "exhaustOutlets": {
+    "1": [
+     [
+      0.13,
+      0.3,
+      -2.152,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.13,
+      0.3,
+      -2.152,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "2": [
+     [
+      0.2,
+      0.3,
+      -2.152,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      0.31,
+      0.3,
+      -2.152,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.2,
+      0.3,
+      -2.152,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.31,
+      0.3,
+      -2.152,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "3": [
+     [
+      0.075,
+      0.52,
+      -2.19,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.075,
+      0.52,
+      -2.19,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ]
+   },
+   "maxLoweringCm": 3,
+   "rims": [
+    "Y-Speiche",
+    "Kreuzspeiche",
+    "Turbine"
+   ],
+   "spoilers": [
+    "Lippe",
+    "GT-Flügel",
+    "Cyber-Flügel"
+   ],
+   "liveries": [
+    "Rennstreifen",
+    "Seitenblitz",
+    "Startnummer"
+   ],
+   "triangles": {
+    "L0": 110662,
+    "L1": 23468,
+    "L2": 14660
+   },
+   "fileBytes": 6124432
+  }
+ ]
+}

@@ -1,0 +1,146 @@
+:root {
+  --bg: #07080c;
+  --panel: rgba(12, 14, 22, 0.78);
+  --panel-solid: #0c0e16;
+  --line: rgba(255, 255, 255, 0.08);
+  --text: #e7e9f2;
+  --muted: #8a90a6;
+  --accent: #00e5ff;
+  --accent2: #ff2bd6;
+  --radius: 14px;
+  --gap: 12px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  font-family: "Rajdhani", "Segoe UI", "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overflow: hidden; }
+#view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+button, input, select { font: inherit; color: inherit; }
+.hidden { display: none !important; }
+.muted { color: var(--muted); }
+
+/* Kopfzeile */
+.topbar {
+  position: fixed; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: var(--gap);
+  padding: 10px 14px; background: linear-gradient(180deg, rgba(7, 8, 12, 0.85), rgba(7, 8, 12, 0));
+  pointer-events: none; z-index: 5;
+}
+.topbar > * { pointer-events: auto; }
+.brand { display: flex; flex-direction: column; line-height: 1; }
+.logo { font-weight: 800; letter-spacing: 0.18em; font-size: 18px; color: var(--accent);
+  text-shadow: 0 0 12px rgba(0, 229, 255, 0.35); }
+.sub { font-size: 11px; letter-spacing: 0.5em; color: var(--accent2); margin-top: 4px; }
+.carname { flex: 1; text-align: center; min-width: 0; }
+#carTitle { font-size: 22px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+#carClass { font-size: 13px; }
+.actions { display: flex; gap: 8px; }
+.icon {
+  min-width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel);
+  backdrop-filter: blur(8px); cursor: pointer; font-size: 18px;
+}
+.icon.wide { min-width: 84px; font-size: 14px; font-weight: 600; letter-spacing: 0.04em; }
+.icon:hover { border-color: rgba(0, 229, 255, 0.5); }
+
+.perf {
+  position: fixed; top: 64px; left: 14px; z-index: 5; font: 12px/1.45 ui-monospace, Menlo, Consolas, monospace;
+  background: rgba(0, 0, 0, 0.55); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line);
+  white-space: pre;
+}
+
+/* Fahrzeugliste */
+.carlist {
+  position: fixed; left: 14px; top: 110px; width: 220px; display: flex; flex-direction: column; gap: 8px; z-index: 4;
+  max-height: calc(100% - 300px); overflow-y: auto;
+}
+.car {
+  text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--line);
+  background: var(--panel); backdrop-filter: blur(8px); cursor: pointer; position: relative; overflow: hidden;
+}
+.car::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--c, var(--accent)); opacity: 0.7; }
+.car b { display: block; font-size: 16px; letter-spacing: 0.04em; text-transform: uppercase; }
+.car span { font-size: 12px; color: var(--muted); }
+.car.active { border-color: var(--c, var(--accent)); box-shadow: 0 0 0 1px var(--c, var(--accent)) inset; }
+.car.soon { opacity: 0.45; cursor: default; }
+
+/* Panels */
+.panel {
+  position: fixed; z-index: 4; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+  backdrop-filter: blur(10px);
+}
+.tuning { right: 14px; top: 70px; width: 320px; max-height: calc(100% - 230px); display: flex; flex-direction: column; }
+.panel-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px 4px;
+  font-weight: 700; letter-spacing: 0.2em; font-size: 13px; color: var(--muted); }
+.link { background: none; border: 0; cursor: pointer; font-size: 18px; color: var(--muted); }
+.tabs { display: flex; gap: 4px; padding: 6px 10px; flex-wrap: wrap; }
+.tab { flex: 1; padding: 7px 4px; border-radius: 9px; border: 1px solid transparent; background: rgba(255, 255, 255, 0.04);
+  cursor: pointer; font-weight: 600; font-size: 13px; }
+.tab.active { border-color: var(--accent); color: var(--accent); background: rgba(0, 229, 255, 0.08); }
+.tab-body { padding: 4px 14px 14px; overflow-y: auto; }
+.group { margin-top: 12px; }
+.group > .label { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+  display: flex; justify-content: space-between; }
+.opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.opt { padding: 7px 10px; border-radius: 9px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.04);
+  cursor: pointer; font-size: 13px; font-weight: 600; }
+.opt.active { border-color: var(--accent); color: var(--accent); }
+.swatches { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+.sw { aspect-ratio: 1; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.15); cursor: pointer; padding: 0; }
+.sw.active { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); }
+.sw.pick { background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red); position: relative; overflow: hidden; }
+.sw.pick input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+
+.demo { left: 50%; transform: translateX(-50%); bottom: calc(14px + var(--safe-b)); width: min(860px, calc(100% - 28px));
+  padding: 10px 14px; }
+.stats { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; font-size: 13px; color: var(--muted);
+  padding-bottom: 8px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.stats b { color: var(--text); font-size: 16px; margin-left: 4px; }
+.controls { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.ctl { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); min-width: 150px; flex: 1; }
+.chip { padding: 8px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.05);
+  cursor: pointer; font-weight: 600; font-size: 13px; user-select: none; -webkit-user-select: none; }
+.chip.active { border-color: var(--accent); color: var(--accent); }
+.chip.primary { background: var(--accent); color: #001014; border-color: var(--accent); }
+
+/* Laden */
+.loading { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 8; text-align: center;
+  font-size: 14px; color: var(--muted); }
+.loading .bar { width: 220px; height: 4px; background: rgba(255, 255, 255, 0.08); border-radius: 2px; overflow: hidden;
+  margin-bottom: 10px; }
+#loadBar { height: 100%; width: 0; background: var(--accent); transition: width 0.15s; }
+
+/* Einstellungen */
+.dialog { border: 1px solid var(--line); border-radius: 18px; background: var(--panel-solid); color: var(--text);
+  width: min(460px, calc(100% - 24px)); padding: 18px 20px; }
+.dialog::backdrop { background: rgba(0, 0, 0, 0.55); backdrop-filter: blur(3px); }
+.dialog h2 { margin: 0 0 10px; letter-spacing: 0.12em; text-transform: uppercase; font-size: 18px; color: var(--accent); }
+.row { display: flex; flex-direction: column; gap: 6px; margin: 14px 0 4px; font-size: 14px; }
+.row > span { display: flex; justify-content: space-between; }
+.row.check { flex-direction: row; align-items: center; gap: 10px; }
+.row select { padding: 8px; border-radius: 9px; background: #151824; border: 1px solid var(--line); }
+.hint { font-size: 12px; color: var(--muted); margin: 2px 0 0; }
+.buttons { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; margin-top: 18px; }
+
+/* Handy */
+@media (max-width: 820px) {
+  .topbar { padding: 8px 10px; }
+  .logo { font-size: 14px; }
+  .sub { font-size: 9px; }
+  #carTitle { font-size: 16px; }
+  #carClass { font-size: 11px; }
+  .icon { min-width: 38px; height: 38px; }
+  .icon.wide { min-width: 70px; }
+  .carlist { left: 0; right: 0; top: auto; bottom: calc(150px + var(--safe-b)); width: auto; flex-direction: row;
+    overflow-x: auto; padding: 0 10px; max-height: none; }
+  .car { min-width: 150px; }
+  .tuning { left: 10px; right: 10px; width: auto; top: auto; bottom: calc(150px + var(--safe-b)); max-height: 46%; }
+  .tuning.collapsed .tabs, .tuning.collapsed .tab-body { display: none; }
+  body.tuning-open .carlist { display: none; }
+  .demo { width: calc(100% - 20px); bottom: calc(8px + var(--safe-b)); padding: 8px 10px; }
+  .stats { gap: 10px; font-size: 11px; }
+  .stats b { font-size: 13px; }
+  .ctl { min-width: 120px; }
+  .perf { top: 56px; left: 10px; }
+}
