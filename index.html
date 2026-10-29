@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#1b1f24">
+  <title>Highway Dodge</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: #1b1f24;
+      color: #fff;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      overscroll-behavior: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #wrap {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #game {
+      position: relative;
+      /* Hochformat: auf breiten Bildschirmen begrenzen */
+      width: min(100vw, calc(100dvh * 0.6));
+      height: 100dvh;
+      max-height: 100vh;
+    }
+    @supports not (height: 100dvh) {
+      #game { width: min(100vw, calc(100vh * 0.6)); height: 100vh; }
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      padding: 24px;
+      text-align: center;
+      background: rgba(10, 12, 16, 0.72);
+      backdrop-filter: blur(2px);
+    }
+    .hidden { display: none; }
+
+    h1 {
+      font-size: clamp(2rem, 9vw, 3rem);
+      line-height: 1.05;
+      letter-spacing: 0.02em;
+      color: #ffd23f;
+      text-shadow: 0 4px 0 #b3361f;
+    }
+    h2 { font-size: clamp(1.8rem, 8vw, 2.4rem); color: #ff5a4e; }
+
+    p { font-size: 1rem; line-height: 1.5; color: #d6dbe1; max-width: 22em; }
+    .big { font-size: 2.6rem; font-weight: 800; color: #fff; }
+    .label { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.12em; color: #9aa4b0; }
+    .new-record { color: #ffd23f; font-weight: 700; }
+
+    button {
+      font: inherit;
+      font-size: 1.25rem;
+      font-weight: 700;
+      padding: 14px 40px;
+      border: none;
+      border-radius: 999px;
+      background: #ffd23f;
+      color: #1b1f24;
+      cursor: pointer;
+      box-shadow: 0 5px 0 #b38f1a;
+      touch-action: manipulation;
+    }
+    button:active { transform: translateY(3px); box-shadow: 0 2px 0 #b38f1a; }
+    button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <div id="game">
+      <canvas id="canvas"></canvas>
+
+      <div id="startScreen" class="overlay">
+        <h1>Highway<br>Dodge</h1>
+        <p>Weiche dem Gegenverkehr aus! Je länger du fährst, desto schneller wird es.</p>
+        <p class="label">Steuerung</p>
+        <p>PC: Pfeiltasten ← →<br>Handy: links/rechts tippen oder wischen</p>
+        <p id="startHighscore" class="label"></p>
+        <button id="startBtn">Start</button>
+      </div>
+
+      <div id="gameOverScreen" class="overlay hidden">
+        <h2>Game Over</h2>
+        <div>
+          <div class="label">Punkte</div>
+          <div id="finalScore" class="big">0</div>
+        </div>
+        <p id="recordText"></p>
+        <button id="restartBtn">Nochmal spielen</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    'use strict';
+
+    // ---- Konstanten -------------------------------------------------------
+    const W = 360;                  // logische Breite; Höhe ergibt sich aus dem Seitenverhältnis
+    const LANES = 3;
+    const SHOULDER = 24;            // Randstreifen links/rechts
+    const ROAD_W = W - SHOULDER * 2;
+    const LANE_W = ROAD_W / LANES;
+    const CAR_W = 52;
+    const CAR_H = 92;
+    const START_SPEED = 260;        // Pixel pro Sekunde
+    const MAX_SPEED = 900;
+    const ACCEL = 9;                // Geschwindigkeitszuwachs pro Sekunde
+    const HS_KEY = 'highwayDodgeHighscore';
+    const ENEMY_COLORS = ['#3a86ff', '#8338ec', '#06d6a0', '#ff8c42', '#f72585', '#e9ecef'];
+
+    // ---- DOM --------------------------------------------------------------
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const startScreen = document.getElementById('startScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const finalScoreEl = document.getElementById('finalScore');
+    const recordTextEl = document.getElementById('recordText');
+    const startHighscoreEl = document.getElementById('startHighscore');
+
+    // ---- Zustand ----------------------------------------------------------
+    let H = 640;          // logische Höhe
+    let scale = 1;        // Pixel pro logischer Einheit
+    let state = 'start';  // 'start' | 'playing' | 'over'
+    let speed, distance, roadOffset, spawnTimer, enemies, player, lastTime, shake;
+    let highscore = loadHighscore();
+
+    function loadHighscore() {
+      try { return parseInt(localStorage.getItem(HS_KEY), 10) || 0; } catch { return 0; }
+    }
+    function saveHighscore(v) {
+      try { localStorage.setItem(HS_KEY, String(v)); } catch { /* z. B. privater Modus */ }
+    }
+
+    const laneX = lane => SHOULDER + LANE_W * lane + LANE_W / 2;
+    const score = () => Math.floor(distance / 20);
+
+    // ---- Größe / Skalierung ----------------------------------------------
+    function resize() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 3);
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      scale = canvas.width / W;
+      H = canvas.height / scale;
+      if (player) player.y = H - CAR_H - 40;
+      if (state !== 'playing') draw();
+    }
+    window.addEventListener('resize', resize);
+    window.addEventListener('orientationchange', () => setTimeout(resize, 200));
+
+    // ---- Spielablauf ------------------------------------------------------
+    function reset() {
+      speed = START_SPEED;
+      distance = 0;
+      roadOffset = 0;
+      spawnTimer = 0.6;
+      enemies = [];
+      shake = 0;
+      player = { lane: 1, x: laneX(1), y: H - CAR_H - 40 };
+    }
+
+    function startGame() {
+      reset();
+      state = 'playing';
+      startScreen.classList.add('hidden');
+      gameOverScreen.classList.add('hidden');
+      lastTime = performance.now();
+      requestAnimationFrame(loop);
+    }
+
+    function gameOver() {
+      state = 'over';
+      shake = 0.35;
+      const s = score();
+      finalScoreEl.textContent = s;
+      if (s > highscore) {
+        highscore = s;
+        saveHighscore(s);
+        recordTextEl.innerHTML = '<span class="new-record">Neuer Highscore!</span>';
+      } else {
+        recordTextEl.textContent = 'Highscore: ' + highscore;
+      }
+      // kurze Verzögerung, damit man den Crash sieht
+      setTimeout(() => {
+        gameOverScreen.classList.remove('hidden');
+        restartBtn.focus();
+      }, 450);
+    }
+
+    function steer(dir) {
+      if (state !== 'playing') return;
+      player.lane = Math.max(0, Math.min(LANES - 1, player.lane + dir));
+    }
+
+    // Gegner so platzieren, dass immer mindestens eine Spur frei bleibt
+    function spawnEnemy() {
+      const nearTop = enemies.filter(e => e.y < CAR_H * 2.2);
+      const blocked = new Set(nearTop.map(e => e.lane));
+      const free = [];
+      for (let l = 0; l < LANES; l++) if (!blocked.has(l)) free.push(l);
+      if (free.length <= 1) return false; // sonst wäre die Straße dicht
+      const lane = free[Math.floor(Math.random() * free.length)];
+      enemies.push({
+        lane,
+        x: laneX(lane),
+        y: -CAR_H - 10,
+        rel: 0.25 + Math.random() * 0.35,  // eigene Geschwindigkeit (relativ zur Straße)
+        color: ENEMY_COLORS[Math.floor(Math.random() * ENEMY_COLORS.length)],
+      });
+      return true;
+    }
+
+    function update(dt) {
+      if (state === 'playing') {
+        speed = Math.min(MAX_SPEED, speed + ACCEL * dt);
+        distance += speed * dt;
+      }
+      roadOffset = (roadOffset + speed * dt) % 60;
+
+      // Spieler gleitet weich zur Zielspur
+      const tx = laneX(player.lane);
+      player.x += (tx - player.x) * Math.min(1, dt * 14);
+
+      // Gegner bewegen
+      for (const e of enemies) e.y += speed * (1 + e.rel) * dt;
+      enemies = enemies.filter(e => e.y < H + CAR_H);
+
+      if (state !== 'playing') return;
+
+      // Gegner erzeugen – Abstand wird mit steigendem Tempo kürzer
+      spawnTimer -= dt;
+      if (spawnTimer <= 0) {
+        const progress = (speed - START_SPEED) / (MAX_SPEED - START_SPEED);
+        const base = 1.0 - progress * 0.55;
+        spawnTimer = spawnEnemy() ? base * (0.6 + Math.random() * 0.7) : 0.1;
+      }
+
+      // Kollision (Hitbox etwas kleiner als die Grafik → fairer)
+      const px = player.x - CAR_W / 2 + 5, py = player.y + 6;
+      const pw = CAR_W - 10, ph = CAR_H - 12;
+      for (const e of enemies) {
+        const ex = e.x - CAR_W / 2 + 5, ey = e.y + 6;
+        if (px < ex + pw && px + pw > ex && py < ey + ph && py + ph > ey) {
+          gameOver();
+          break;
+        }
+      }
+    }
+
+    // ---- Zeichnen ---------------------------------------------------------
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function drawRoad() {
+      // Gras
+      ctx.fillStyle = '#2f7d32';
+      ctx.fillRect(0, 0, W, H);
+      // Rand-Rüttelstreifen (rot/weiß)
+      for (let y = -60 + roadOffset; y < H; y += 60) {
+        ctx.fillStyle = '#d62828';
+        ctx.fillRect(SHOULDER - 8, y, 8, 30);
+        ctx.fillRect(W - SHOULDER, y, 8, 30);
+        ctx.fillStyle = '#f1f1f1';
+        ctx.fillRect(SHOULDER - 8, y + 30, 8, 30);
+        ctx.fillRect(W - SHOULDER, y + 30, 8, 30);
+      }
+      // Asphalt
+      ctx.fillStyle = '#3b3f45';
+      ctx.fillRect(SHOULDER, 0, ROAD_W, H);
+      // Spurmarkierungen
+      ctx.fillStyle = '#e8e8e8';
+      for (let l = 1; l < LANES; l++) {
+        const x = SHOULDER + LANE_W * l - 2;
+        for (let y = -60 + roadOffset; y < H; y += 60) ctx.fillRect(x, y, 4, 32);
+      }
+    }
+
+    function drawCar(x, y, color, isPlayer) {
+      const left = x - CAR_W / 2;
+      // Schatten
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      roundRect(left + 4, y + 6, CAR_W, CAR_H, 12);
+      ctx.fill();
+      // Räder
+      ctx.fillStyle = '#111';
+      ctx.fillRect(left - 4, y + 14, 8, 20);
+      ctx.fillRect(left + CAR_W - 4, y + 14, 8, 20);
+      ctx.fillRect(left - 4, y + CAR_H - 34, 8, 20);
+      ctx.fillRect(left + CAR_W - 4, y + CAR_H - 34, 8, 20);
+      // Karosserie
+      ctx.fillStyle = color;
+      roundRect(left, y, CAR_W, CAR_H, 12);
+      ctx.fill();
+      // Front zeigt beim Spieler nach oben, bei Gegnern nach unten
+      const frontTop = isPlayer;
+      const wsY = frontTop ? y + 20 : y + CAR_H - 38;   // Windschutzscheibe
+      const rwY = frontTop ? y + CAR_H - 26 : y + 12;   // Heckscheibe
+      ctx.fillStyle = '#9fd3ff';
+      roundRect(left + 7, wsY, CAR_W - 14, 18, 4);
+      ctx.fill();
+      ctx.fillStyle = '#7fb6e0';
+      roundRect(left + 9, rwY, CAR_W - 18, 13, 3);
+      ctx.fill();
+      // Dach
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      roundRect(left + 8, frontTop ? y + 40 : y + 27, CAR_W - 16, CAR_H - 66, 5);
+      ctx.fill();
+      // Lichter
+      const lightY = frontTop ? y + 2 : y + CAR_H - 7;
+      ctx.fillStyle = '#fff6b0';
+      ctx.fillRect(left + 6, lightY, 11, 5);
+      ctx.fillRect(left + CAR_W - 17, lightY, 11, 5);
+      const tailY = frontTop ? y + CAR_H - 6 : y + 1;
+      ctx.fillStyle = '#ff2e2e';
+      ctx.fillRect(left + 6, tailY, 10, 4);
+      ctx.fillRect(left + CAR_W - 16, tailY, 10, 4);
+      // Rennstreifen für den Spieler
+      if (isPlayer) {
+        ctx.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx.fillRect(x - 4, y + 4, 8, 14);
+        ctx.fillRect(x - 4, y + 64, 8, CAR_H - 70);
+      }
+    }
+
+    function drawHud() {
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      roundRect(8, 8, 130, 50, 10);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 22px system-ui, sans-serif';
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'left';
+      ctx.fillText(String(score()), 18, 13);
+      ctx.font = '12px system-ui, sans-serif';
+      ctx.fillStyle = '#c8ced6';
+      ctx.fillText('HI ' + Math.max(highscore, score()), 18, 39);
+
+      const kmh = Math.round(speed / 3);
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      roundRect(W - 108, 8, 100, 50, 10);
+      ctx.fill();
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#ffd23f';
+      ctx.font = 'bold 22px system-ui, sans-serif';
+      ctx.fillText(String(kmh), W - 18, 13);
+      ctx.font = '12px system-ui, sans-serif';
+      ctx.fillStyle = '#c8ced6';
+      ctx.fillText('km/h', W - 18, 39);
+    }
+
+    function draw() {
+      if (!player) reset();
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      if (shake > 0) {
+        ctx.translate((Math.random() - 0.5) * 10 * shake, (Math.random() - 0.5) * 10 * shake);
+      }
+      drawRoad();
+      for (const e of enemies) drawCar(e.x, e.y, e.color, false);
+      drawCar(player.x, player.y, '#e63946', true);
+      if (state !== 'start') drawHud();
+    }
+
+    function loop(now) {
+      const dt = Math.min(0.05, (now - lastTime) / 1000);
+      lastTime = now;
+      if (state === 'playing') {
+        update(dt);
+      } else if (shake > 0) {
+        shake = Math.max(0, shake - dt);
+      }
+      draw();
+      if (state === 'playing' || shake > 0) requestAnimationFrame(loop);
+    }
+
+    // ---- Eingabe ----------------------------------------------------------
+    window.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { steer(-1); e.preventDefault(); }
+      else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { steer(1); e.preventDefault(); }
+      else if ((e.key === 'Enter' || e.key === ' ') && state === 'start') { startGame(); e.preventDefault(); }
+    });
+
+    // Touch/Maus: Wischen oder Tippen auf linke/rechte Hälfte
+    let touchStart = null;
+    canvas.addEventListener('pointerdown', e => {
+      touchStart = { x: e.clientX, y: e.clientY };
+      e.preventDefault();
+    });
+    canvas.addEventListener('pointerup', e => {
+      if (!touchStart) return;
+      const dx = e.clientX - touchStart.x;
+      const dy = e.clientY - touchStart.y;
+      touchStart = null;
+      if (Math.abs(dx) > 30 && Math.abs(dx) > Math.abs(dy)) {
+        steer(dx > 0 ? 1 : -1);            // Wischen
+      } else {
+        const rect = canvas.getBoundingClientRect();
+        steer(e.clientX - rect.left < rect.width / 2 ? -1 : 1); // Tippen
+      }
+    });
+    canvas.addEventListener('pointercancel', () => { touchStart = null; });
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', startGame);
+
+    // ---- Init -------------------------------------------------------------
+    if (highscore > 0) startHighscoreEl.textContent = 'Highscore: ' + highscore;
+    resize();
+  })();
+  </script>
+</body>
+</html>
