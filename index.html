@@ -90,6 +90,16 @@
     }
     button:active { transform: translateY(3px); box-shadow: 0 2px 0 #b38f1a; }
     button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+    .link3d {
+      color: #ffd23f;
+      font-weight: 700;
+      text-decoration: none;
+      padding: 8px 14px;
+      border: 2px solid rgba(255, 210, 63, 0.5);
+      border-radius: 999px;
+    }
+    .link3d:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
   </style>
 </head>
 <body>
@@ -104,6 +114,7 @@
         <p>PC: Pfeiltasten ← →<br>Handy: links/rechts tippen oder wischen</p>
         <p id="startHighscore" class="label"></p>
         <button id="startBtn">Start</button>
+        <a class="link3d" href="3d/">3D-Version spielen →</a>
       </div>
 
       <div id="gameOverScreen" class="overlay hidden">
