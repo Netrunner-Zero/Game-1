@@ -17,7 +17,7 @@ SPEC = {
     "deco_label": [("PIT PASS", 70), ("NEON GP", 46)],
     "palette": {
         "paint": "#c8102e", "accent": "#00e5ff", "rim": "#1d1f23", "caliper": "#f0b400",
-        "seat": "#141416", "insert": "alcantara", "insert_color": "#2a2b30", "stitch": "#e01020",
+        "seat": "#6e0f18", "insert": "alcantara", "insert_color": "#1b1c20", "stitch": "#d8d8d8",
         "trim": "carbon", "trim2": "pianoblack", "dash": "#121214", "door": "#151517",
         "headliner": "#18181b", "carpet": "#0c0c0d", "wheel_leather": "#121214", "wheel_grip": "insert",
         "ambient": "#ff3040", "marker": "#e01020", "cage": "#1a1a1d", "belt": "black", "grille": "black",
@@ -76,7 +76,7 @@ SPEC = {
                 "variants": [[(0.13, 0.042, "round", "Chrome"), (-0.13, 0.042, "round", "Chrome")],
                              [(0.20, 0.036, "oval", "DarkChrome"), (0.31, 0.036, "oval", "DarkChrome"),
                               (-0.20, 0.036, "oval", "DarkChrome"), (-0.31, 0.036, "oval", "DarkChrome")],
-                             [(0.075, 0.05, "round", "Titanium", 0.52), (-0.075, 0.05, "round", "Titanium", 0.52)]]},
+                             [(0.085, 0.046, "round", "Titanium", 0.655), (-0.085, 0.046, "round", "Titanium", 0.655)]]},
     # --------------------------------------------------------------
     "interior": {
         "floor": 0.22, "fw": 1.28, "rb": -0.55, "hpt_z": -0.04, "seat_x": 0.34, "tunnel": 0.15,
@@ -235,7 +235,7 @@ def engine(ctx):
     # Stufe 3: Dachhutze + Ansaugschacht über die Heckscheibe
     s3 = Part("EngineStage_3")
     sub = type(ctx)(ctx.spec, lod, ctx.b, ctx.rc)
-    kit.roof_scoop(sub, 0.06, -1.25, w=0.26, h=0.10, mat="Carbon", part="Scoop")
+    kit.roof_scoop(sub, 0.06, -1.22, w=0.32, h=0.085, mat="Carbon", part="Scoop")
     s3.merge(sub.part("Scoop"))
     out["EngineStage_3"] = s3
     return out

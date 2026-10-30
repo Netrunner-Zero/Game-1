@@ -12,7 +12,7 @@ import math
 
 import numpy as np
 
-from .mesh import Part, norm, round_rect, resample, round_open, rot_matrix
+from .mesh import Part, norm, round_rect, resample, round_open, rot_matrix, round_poly
 
 
 # ----------------------------------------------------------------------
@@ -557,81 +557,179 @@ class Cockpit:
     # Sitze
     # --------------------------------------------------------------
     def seat(self, x, z, kind="bucket", recline=18.0, width=0.52, back_h=None, rear=False):
-        """Sitz in Fahrtrichtung, Sitzfläche auf dem Boden (Höhe aus der Konfiguration)."""
+        """Sitz in Fahrtrichtung: gepolsterte Sitzfläche und Lehne als geschlossene Körper
+        mit Seitenwangen, Mittelbahn (SeatInsert), Ziernähten und Rückschale.
+
+        kind: bucket (Schalensitz, Kopfstütze integriert, Carbon-Rückschale),
+              sport (Sportsitz, integrierte Kopfstütze, Leder-Rückschale),
+              comfort (Komfortsitz, flache Wangen, Kopfstütze auf Stangen)."""
         p = self.part
+        I = self.I
         fl = self.floor
-        cushion_h = self.I.get("cushion_h", 0.16 if kind == "bucket" else 0.24)
+        bucket = kind in ("bucket", "sport")
+        cushion_h = I.get("cushion_h", 0.12 if bucket else 0.22)
         if rear:
-            cushion_h = self.I.get("rear_cushion_h", cushion_h + 0.02)
-        w2 = width / 2
-        bol = 0.06 if kind in ("bucket", "sport") else 0.025
-        # Sitzfläche: Loft entlang z (vorne -> hinten)
-        L = 0.48 if not rear else 0.46
-        zf, zb = z + 0.24, z + 0.24 - L
-        secs = []
-        for t in np.linspace(0, 1, 8):
+            cushion_h = I.get("rear_cushion_h", cushion_h + 0.02)
+        W = width
+        bb = 0.07 if kind == "bucket" else 0.05 if kind == "sport" else 0.025       # Wangenhöhe
+        bw = 0.09 if bucket else 0.075                                              # Wangenbreite
+        yc = fl + cushion_h
+        y0 = fl + 0.045
+        L = 0.50 if not rear else 0.47
+        zf, zb = z + L / 2, z - L / 2
+        M = 56
+
+        def cushion_section(t):
+            yct = yc + 0.028 * (1 - t) ** 2 - 0.012 * t
+            bbt = bb * (0.55 + 0.45 * math.sin(math.pi * min(1.0, t * 1.2)))
+            Wt = W * (1 - 0.05 * (1 - t) ** 2)
+            h2 = Wt / 2
+            pts = [(-h2 + 0.02, y0), (h2 - 0.02, y0), (h2, y0 + 0.04), (h2, yct + bbt * 0.55),
+                   (h2 - bw * 0.45, yct + bbt), (h2 - bw, yct + 0.012), (h2 - bw - 0.03, yct),
+                   (-(h2 - bw - 0.03), yct), (-(h2 - bw), yct + 0.012), (-(h2 - bw * 0.45), yct + bbt),
+                   (-h2, yct + bbt * 0.55), (-h2, y0 + 0.04)]
+            rad = [0.015, 0.015, 0.03, 0.035, 0.03, 0.03, 0.02, 0.02, 0.03, 0.03, 0.035, 0.03]
+            return resample(round_poly(pts, rad, 3), M, closed=True), yct, h2
+
+        # Sitzfläche: Schnitte von vorne nach hinten, vorne gerundet
+        secs, uvs = [], []
+        r_front = 0.035
+        ts = list(np.linspace(0, 1, 10))
+        prof0, yc0, h20 = cushion_section(0.0)
+        c0 = np.mean(np.array(prof0), axis=0)
+        for a in np.linspace(math.pi / 2, 0, 4)[:-1]:        # Rundung der Vorderkante
+            sc = 0.55 + 0.45 * math.cos(a)
+            zz = zf + r_front * math.sin(a)
+            secs.append([np.array([x + c0[0] + (u - c0[0]) * sc, c0[1] + (v - c0[1]) * sc, zz]) for (u, v) in prof0])
+        for t in ts:
+            prof, _yct, _h2 = cushion_section(t)
             zz = zf + (zb - zf) * t
-            lift = 0.02 * math.sin(t * math.pi) + (0.015 if t < 0.15 else 0)
-            yt = fl + cushion_h + lift - 0.03 * t
-            prof = [(w2, fl + 0.02), (w2, yt + bol), (w2 - 0.06, yt + bol * 0.6), (w2 - 0.11, yt),
-                    (-w2 + 0.11, yt), (-w2 + 0.06, yt + bol * 0.6), (-w2, yt + bol), (-w2, fl + 0.02)]
-            ch = round_open(prof, [0, 0.03, 0.03, 0.02, 0.02, 0.03, 0.03, 0], 2)
-            secs.append([np.array([x + u, v, zz]) for (u, v) in ch])
+            secs.append([np.array([x + u, v, zz]) for (u, v) in prof])
+        mid = cushion_section(0.5)
+        ins = []
+        for j in range(M):
+            (u0, v0), (u1, v1) = mid[0][j], mid[0][(j + 1) % M]
+            um, vm = (u0 + u1) / 2, (v0 + v1) / 2
+            ins.append(abs(um) < mid[2] - bw - 0.012 and vm > mid[1] - 0.01)
         tmp = Part("cushion")
-        nseg = len(secs[0]) - 1
-        mid0, mid1 = int(nseg * 0.38), int(nseg * 0.62)
-        tmp.loft(secs, lambda k, j: "SeatInsert" if mid0 <= j < mid1 else "Seat", closed=False, smooth=True,
-                 caps=("Seat", "Seat"), hint_fn=lambda k: np.array([x, fl - 0.3, zf - 0.2]))
+        tmp.loft(secs, lambda k, j: "SeatInsert" if ins[j] else "Seat", closed=True, smooth=True,
+                 caps=("Seat", "Seat"))
         p.merge(tmp)
-        # Nähte an der Sitzfläche
-        for jj in (mid0, mid1):
-            pts = [secs[k][jj] for k in range(1, 7)]
-            stitch_line(p, pts, (0, 1, 0))
-        # Lehne: Loft entlang der Lehnenachse
+        # Nähte entlang der Mittelbahn
+        jb = [j for j in range(M) if ins[j] != ins[j - 1]]
+        for j0 in jb:
+            pts = [secs[k][j0] for k in range(3, len(secs) - 1)]
+            stitch_line(p, pts, (0, 1, 0), width=0.0035, offset=0.002)
+        # Querteilung (Steppung) der Mittelbahn
+        if bucket:
+            for k in (6, 9):
+                row = [secs[k][j] for j in range(M) if ins[j] or ins[j - 1]]
+                if len(row) > 2:
+                    stitch_line(p, row, (0, 1, 0), width=0.003, offset=0.002)
+
+        # Lehne
         rec = math.radians(recline)
         up = np.array([0.0, math.cos(rec), -math.sin(rec)])
         fwd = np.array([0.0, math.sin(rec), math.cos(rec)])
-        base = np.array([x, fl + cushion_h - 0.01, zb + 0.06])
-        H = back_h or self.I.get("back_h", 0.62 if kind == "bucket" else 0.56)
-        secs = []
-        integrated = kind in ("bucket", "sport")
-        n_s = 10
-        for t in np.linspace(0, 1, n_s):
-            hh = H * t
-            ww = w2 * (1.0 - 0.18 * t) if integrated else w2 * (1.0 - 0.08 * t)
-            if integrated and t > 0.78:
-                ww = w2 * 0.52
-            bl = bol * (1.6 - 0.8 * t) if t < 0.78 else 0.01
-            thick = 0.12
-            prof = [(ww, -thick), (ww, bl + 0.02), (ww - 0.06, bl * 0.5 + 0.02), (ww - 0.1, 0.0),
-                    (-ww + 0.1, 0.0), (-ww + 0.06, bl * 0.5 + 0.02), (-ww, bl + 0.02), (-ww, -thick)]
-            ch = round_open(prof, [0, 0.03, 0.03, 0.02, 0.02, 0.03, 0.03, 0], 2)
+        base = np.array([x, yc - 0.02, zb + 0.07])
+        H = back_h or I.get("back_h", 0.66 if bucket else 0.58)
+        integrated = bucket
+        T = 0.07 if kind == "bucket" else 0.08                    # Dicke hinter der Polsterfläche
+        wing = 0.11 if kind == "bucket" else 0.07 if kind == "sport" else 0.035
+
+        def back_width(h):
+            f = h / H
+            if not integrated:
+                return W * (0.98 - 0.08 * f)
+            if f < 0.62:
+                return W * (1.0 - 0.06 * f)
+            if f < 0.76:                                         # Schulter -> Kopfstütze
+                s_ = (f - 0.62) / 0.14
+                return W * ((1.0 - 0.06 * 0.62) * (1 - s_) + 0.54 * s_)
+            return W * 0.54
+
+        def wing_depth(h):
+            f = h / H
+            if integrated and f > 0.76:
+                return wing * 0.25
+            return wing * (0.75 + 0.25 * math.sin(math.pi * min(1.0, f / 0.7)))
+
+        def back_section(h):
+            w2 = back_width(h) / 2
+            wd = wing_depth(h)
+            bwi = min(bw, w2 * 0.38)
+            pts = [(-w2 + 0.03, -T), (w2 - 0.03, -T), (w2, -T + 0.03), (w2, wd - 0.03), (w2 - 0.025, wd),
+                   (w2 - bwi, 0.03), (w2 - bwi - 0.03, 0.0), (-(w2 - bwi - 0.03), 0.0), (-(w2 - bwi), 0.03),
+                   (-(w2 - 0.025), wd), (-w2, wd - 0.03), (-w2, -T + 0.03)]
+            rad = [0.03, 0.03, 0.03, 0.03, 0.025, 0.035, 0.02, 0.02, 0.035, 0.025, 0.03, 0.03]
+            return resample(round_poly(pts, rad, 3), M, closed=True), w2, bwi
+
+        shell = I.get("seat_shell", "Carbon" if kind == "bucket" else "Seat")
+        hs = list(np.linspace(0.0, H, 14))
+        bsecs = []
+        for h in hs:
+            prof, w2, bwi = back_section(h)
+            c = base + up * h
+            bsecs.append([c + np.array([u, 0, 0]) + fwd * d for (u, d) in prof])
+        # obere Rundung
+        prof_t, w2t, _ = back_section(H)
+        ct = np.mean(np.array(prof_t), axis=0)
+        for a in np.linspace(0, math.pi / 2, 4)[1:]:
+            sc = 0.45 + 0.55 * math.cos(a)
+            hh = H + 0.045 * math.sin(a)
             c = base + up * hh
-            secs.append([c + np.array([u, 0, 0]) + fwd * v for (u, v) in ch])
+            bsecs.append([c + np.array([ct[0] + (u - ct[0]) * sc, 0, 0]) + fwd * (ct[1] + (d - ct[1]) * sc)
+                          for (u, d) in prof_t])
+        midb, w2m, bwm = back_section(H * 0.4)
+        cls = []
+        for j in range(M):
+            (u0, d0), (u1, d1) = midb[j], midb[(j + 1) % M]
+            um, dm = (u0 + u1) / 2, (d0 + d1) / 2
+            if dm < -T + 0.012:
+                cls.append("back")
+            elif abs(um) < w2m - bwm - 0.012 and dm > -0.01:
+                cls.append("insert")
+            else:
+                cls.append("side")
+        n_ins = len(hs) - (4 if integrated else 2)
         tmp = Part("back")
-        nseg = len(secs[0]) - 1
-        mid0, mid1 = int(nseg * 0.36), int(nseg * 0.64)
-        tmp.loft(secs, lambda k, j: "SeatInsert" if (mid0 <= j < mid1 and k < n_s - 3) else "Seat", closed=True,
-                 smooth=True, caps=("Seat", "Seat"), hint_fn=lambda k: base + up * (H * k / (n_s - 1)) - fwd * 0.04)
+        tmp.loft(bsecs, lambda k, j: (shell if cls[j] == "back" else
+                                      "SeatInsert" if (cls[j] == "insert" and k < n_ins) else "Seat"),
+                 closed=True, smooth=True, caps=(shell, None))
         p.merge(tmp)
-        for jj in (mid0, mid1):
-            pts = [secs[k][jj] for k in range(1, n_s - 3)]
-            stitch_line(p, pts, fwd)
+        jb = [j for j in range(M) if (cls[j] == "insert") != (cls[j - 1] == "insert")]
+        for j0 in jb:
+            pts = [bsecs[k][j0] for k in range(1, n_ins)]
+            stitch_line(p, pts, fwd, width=0.0035, offset=0.002)
+        if bucket:
+            for k in (4, 7):
+                row = [bsecs[k][j] for j in range(M) if cls[j] == "insert" or cls[j - 1] == "insert"]
+                if len(row) > 2:
+                    stitch_line(p, row, fwd, width=0.003, offset=0.002)
         top = base + up * H
         if integrated:
-            # Gurtdurchführungen (dunkle Schlitze)
+            # Gurtdurchführungen zwischen Schulter und Kopfstütze
+            hb = H * 0.69
+            cb = base + up * hb
+            wbelt = back_width(hb) / 2 - 0.05
             for sx in (-1, 1):
-                p.box(top + np.array([sx * 0.075, 0, 0]) - up * 0.08 + fwd * 0.005, (0.035, 0.07, 0.01), "Gap",
+                p.box(cb + np.array([sx * wbelt, 0, 0]) + fwd * 0.012, (0.05, 0.022, 0.03), "Gap",
                       M=rot_matrix(-rec, 0, 0))
+            # Logo/Prägung in der Kopfstütze
+            p.tex_quad(base + up * (H * 0.88) + fwd * 0.0045, (-1, 0, 0), up, 0.07, 0.07, "Badge")
         else:
             # Kopfstütze auf Stangen
-            hr = top + up * 0.11 + fwd * 0.01
-            p.rbox(hr, (0.26, 0.15, 0.09), 0.04, "Seat", M=rot_matrix(-rec, 0, 0), segs=3)
+            hr = top + up * 0.13 + fwd * 0.015
+            p.rbox(hr, (0.27, 0.16, 0.10), 0.045, "Seat", M=rot_matrix(-rec, 0, 0), segs=3)
             for sx in (-1, 1):
-                p.tube([top - up * 0.02 + np.array([sx * 0.07, 0, 0]), hr - up * 0.05 + np.array([sx * 0.07, 0, 0])],
-                       0.006, "Chrome", segs=6)
-        # Sockel / Schienen
-        p.box((x, fl + 0.025, z + 0.0), (width * 0.7, 0.05, L * 0.8), "InteriorPlastic")
+                p.tube([top - up * 0.03 + np.array([sx * 0.075, 0, 0]), hr - up * 0.05 + np.array([sx * 0.075, 0, 0])],
+                       0.0065, "Chrome", segs=8)
+        # Sockel, Schienen, Hebel
+        p.rbox((x, fl + 0.03, z), (W * 0.62, 0.05, L * 0.78), 0.012, "InteriorPlastic", segs=2)
+        for sx in (-1, 1):
+            p.box((x + sx * W * 0.28, fl + 0.008, z + 0.02), (0.03, 0.016, L * 0.95), "Aluminum")
+        side = 1 if x > 0 else -1
+        p.rbox((x + side * (W / 2 + 0.008), y0 + 0.03, z + 0.08), (0.012, 0.03, 0.10), 0.008, "InteriorPlastic", segs=2)
         return {"top": top, "base": base, "up": up, "fwd": fwd, "H": H, "z_back": zb}
 
     def seats(self):
