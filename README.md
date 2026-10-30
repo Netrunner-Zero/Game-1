@@ -2,8 +2,8 @@
 
 Hier entsteht ein 3D-Autospiel in einer futuristischen Stadt (**Neon Haven**). Zurzeit gibt es:
 
-- **das Spiel** (`game/`, in Arbeit): echte Fahrphysik, Steuerung per Touch, Tastatur und Xbox-Controller,
-  fünf Kameras und ein Testgelände – die Stadt, Verkehr und Regen folgen,
+- **das Spiel** (`game/`, in Arbeit): die Stadt Neon Haven und ein Testgelände, echte Fahrphysik, Steuerung per
+  Touch, Tastatur und Xbox-Controller, fünf Kameras, Tageszeit – Regen und Verkehr folgen,
 - **die Fahrzeug-Garage** (`garage/`): sechs detaillierte 3D-Autos zum Ansehen, Tunen und Testen,
 - **Highway Dodge** (`index.html`): das ursprüngliche kleine 2D-Ausweichspiel (siehe unten).
 
@@ -12,9 +12,16 @@ Hier entsteht ein 3D-Autospiel in einer futuristischen Stadt (**Neon Haven**). Z
 - **Online (Branch `open-world`):** <https://raw.githack.com/Netrunner-Zero/Game-1/open-world/game/index.html>
 - **Lokal:** `python3 -m http.server 8000` im Projektordner, dann `http://localhost:8000/game/`
 
-Stand **Schritt 1 – Fahren:** Testgelände am Stadtrand mit 1,15 km langer Geraden (Bremspunkte bei 300/200/100 m),
+**Neon Haven** (Karte `neon_haven`, ca. 900 × 900 m): Straßenraster mit Neon-Boulevard und Zentralboulevard
+(2 × 3 Spuren, Mittelstreifen mit Bäumen), Avenuen und Gassen, 15 cm hohe Gehwege mit Bordstein, Zebrastreifen und
+Ampeln an jeder Kreuzung (schalten wirklich), Laternen. Viertel: **Downtown** (Glastürme bis ~280 m mit Werbetafeln
+und Neon-Kronen), **Neon-Markt** (Läden, Leuchtreklame), **Wohnviertel**, **Lichtpark**, **Altstadt** und **Hafen**
+(Lagerhallen, Containerlager, Kräne, Kai). Rundherum eine Mauer mit Hochstraße und Skyline, im Süden Wasser.
+Minikarte oben rechts (dreht sich mit, N zeigt nach Norden).
+
+**Testgelände** (Karte `testgelaende`, im Menü unter „Welt“): 1,15 km lange Gerade (Bremspunkte bei 300/200/100 m),
 Kreisbahn, Slalom und Ausweichtest (Pylonen fliegen weg), Tisch-Sprung, Kicker, Rüttel- und Wellenstrecke,
-Crashwand mit Reifenstapeln und Containern; in der Ferne die Skyline. Tageszeit frei einstellbar (auch nachts).
+Crashwand mit Reifenstapeln und Containern. Tageszeit frei einstellbar (auch nachts).
 
 | Was | Tastatur | Xbox-Controller | Touch |
 |-----|----------|-----------------|-------|
@@ -42,11 +49,15 @@ Tests ohne Browser:
 node tests/physics.test.mjs      # 0–100, Vmax, Bremsweg, Querbeschleunigung, Rückwärts, Handbremse, Stabilität
 node tests/collision.test.mjs    # Mauer mit 300 km/h, Wand streifen, Pfosten, Auto gegen Auto
 node tests/world.test.mjs        # Testgelände abfahren: Gerade, Sprung, Wellen, Crashwand, Kreisbahn
+node tests/city.test.mjs         # Stadt: Startplätze, Bordsteine, Ampelzyklus, Boulevard-Fahrt, Häuser
 node tests/smoke/run.mjs         # ganzes Spiel mit Ersatz-three.js: Laden, Fahren, Kameras, Menü, Autowechsel, Nacht, Touch
 ```
 
 Die Karten erzeugt `tools/world-generator` (Python, wie die Autos): `python3 tools/world-generator/generate.py`
-schreibt `world/<karte>.glb` (Grafik) und `world/<karte>.json` (Kollisionen, Rampen, Pylonen, Startplätze, Zonen).
+schreibt `world/<karte>.glb` (Grafik in Kacheln) und `world/<karte>.json` (Kollisionen, Gehwege/Rampen, Laternen,
+Ampeln und Bäume als Positionen für Instancing, Ampelphasen, Spurgraph für den Verkehr, Startplätze, Viertel,
+Minikarte). Ansehen ohne Browser: `python3 tools/world-generator/qa/render_map.py bild.png world/neon_haven.glb
+--eye=-4.2,1.5,-150 --target=-4.2,3.5,-110`.
 
 ## Garage öffnen
 

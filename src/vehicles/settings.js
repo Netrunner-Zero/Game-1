@@ -27,6 +27,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   volume: 0.7,              // Lautstärke 0..1
   timeOfDay: 16.5,          // Tageszeit in Stunden
   timeFlow: false,          // Zeit läuft (ein Tag = 24 Minuten)
+  map: 'neon_haven',        // Karte: 'neon_haven' (Stadt) | 'testgelaende'
 });
 
 function load() {
@@ -52,6 +53,7 @@ export class Settings extends EventTarget {
     if (!['auto', 'low', 'medium', 'high'].includes(this.values.quality)) this.values.quality = 'auto';
     if (!['full', 'sport', 'off'].includes(this.values.assists)) this.values.assists = 'full';
     if (!['swipe', 'tilt', 'buttons'].includes(this.values.touchSteer)) this.values.touchSteer = 'swipe';
+    if (!['neon_haven', 'testgelaende'].includes(this.values.map)) this.values.map = 'neon_haven';
     const ss = Number(this.values.steerSens);
     this.values.steerSens = Number.isFinite(ss) ? Math.min(1.5, Math.max(0.5, ss)) : 1;
     this.values.volume = clamp01(Number(this.values.volume), DEFAULT_SETTINGS.volume);

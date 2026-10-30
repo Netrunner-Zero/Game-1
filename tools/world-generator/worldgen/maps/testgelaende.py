@@ -260,4 +260,6 @@ def build(rnd):
         "props_templates": {"cone": "Prop_Cone"},
     }
     meta.update(data)
-    return parts, cone, meta
+    extras = {"Ground": {"shadow": "receive"}, "Markings": {"shadow": "receive"}, "Structures": {"shadow": "both"},
+              "Lamps": {"shadow": "none"}, "Skyline": {"shadow": "none", "far": True}}
+    return {"nodes": [(k, p, extras.get(k, {})) for k, p in parts.items()], "templates": {"Prop_Cone": cone}, "meta": meta}

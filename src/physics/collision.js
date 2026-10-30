@@ -78,13 +78,15 @@ export class StaticWorld {
     return out;
   }
 
-  /** Strahl in der Ebene (z. B. Kamera gegen Häuser): Anteil 0..1 bis zum ersten Treffer, sonst 1. */
-  raycast(x0, z0, x1, z1, minTop = 0) {
+  /** Strahl in der Ebene (z. B. Kamera gegen Häuser): Anteil 0..1 bis zum ersten Treffer, sonst 1.
+   *  filter(it) wählt die Hindernisse aus (z. B. nur große Rechtecke, keine Masten). */
+  raycast(x0, z0, x1, z1, minTop = 0, filter = null) {
     const list = this.query(Math.min(x0, x1) - 0.5, Math.min(z0, z1) - 0.5, Math.max(x0, x1) + 0.5, Math.max(z0, z1) + 0.5, []);
     let best = 1;
     const dx = x1 - x0, dz = z1 - z0;
     for (const it of list) {
       if (it.top < minTop) continue;
+      if (filter && !filter(it)) continue;
       let t = 1;
       if (it.type === 'box') {
         // in lokale Koordinaten, dann Slab-Test

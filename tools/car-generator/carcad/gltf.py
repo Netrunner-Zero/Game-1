@@ -92,8 +92,9 @@ class GLB:
         name, tile = ref[0], ref[1]
         info = {"index": self._texture(name, clamp=tile is None)}
         if tile:
-            s = 1.0 / tile
-            info["extensions"] = {"KHR_texture_transform": {"scale": [s, s]}}
+            # Kachelgröße in Metern: Zahl (quadratisch) oder (Breite, Höhe)
+            tu, tv = (tile, tile) if not isinstance(tile, (tuple, list)) else tile
+            info["extensions"] = {"KHR_texture_transform": {"scale": [1.0 / tu, 1.0 / tv]}}
             self.ext_used.add("KHR_texture_transform")
         if extra:
             info.update(extra)

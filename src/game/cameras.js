@@ -23,6 +23,7 @@ const angDiff = (a, b) => {
   return d;
 };
 const clamp = THREE.MathUtils.clamp;
+const BIG = (it) => it.type === 'box' && (it.hx > 1.5 || it.hz > 1.5) && it.kind !== 'barrier' && it.kind !== 'quay';
 
 export class CameraRig {
   constructor(camera) {
@@ -138,7 +139,8 @@ export class CameraRig {
       let cyH = ty + height - H * 0.32 + el;
       // nicht in Häuser/Mauern stellen
       if (this.world) {
-        const f = this.world.raycast(tx, tz, cx, cz, cyH - 0.5);
+        // nur große Hindernisse (Häuser, Mauern, Container) – Masten und Bäume dürfen ins Bild ragen
+        const f = this.world.raycast(tx, tz, cx, cz, cyH - 0.5, BIG);
         if (f < 1) {
           d = Math.max(1.4, d * f - 0.4);
           cx = tx - sy * d; cz = tz - cy * d;

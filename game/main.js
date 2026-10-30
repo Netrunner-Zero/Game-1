@@ -1,4 +1,4 @@
-// Neon Haven – Open World (Phase 1: Fahrphysik, Steuerung, Kameras, Testgelände).
+// Neon Haven – Open World: Stadt und Testgelände, Fahrphysik, Steuerung, Kameras, Tageszeit.
 
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
@@ -84,6 +84,7 @@ function applyQuality() {
   }
   resize();
   if (car) car.setQuality(Q);
+  if (world) world.setQuality(Q);
   scene.traverse((o) => { if (o.material && !Array.isArray(o.material)) o.material.needsUpdate = true; });
 }
 
@@ -154,6 +155,28 @@ async function spawnCar(id, at, onProgress) {
       ? meta.tuning.engine[car.tuning.engine || 0].powerKw : meta.stats.powerKw) * 1.36) + ' PS', 2.2);
   } finally {
     carLoading = false;
+  }
+}
+
+const MAPS = { neon_haven: 'Neon Haven', testgelaende: 'Testgelände' };
+
+/** Karte laden (beim Start oder aus dem Menü); das Auto kommt an den ersten Startplatz. */
+async function loadMap(id, onProgress) {
+  const w = await World.load('../world/', id, renderer, onProgress);
+  if (world) world.dispose();
+  world = w;
+  scene.add(world.object);
+  world.setQuality(Q);
+  world.setNight(sky.nightK);
+  const env = world.meta.env || {};
+  sky.setFog(env.fogNear || 250, env.fogFar || 1700);
+  collisions = new Collisions(world.statics);
+  rig.world = world.statics;
+  hud.setMinimap(world.meta.minimap ? '../world/' + world.meta.minimap.file : null, world.meta.minimap || null);
+  zoneShown = '';
+  if (phys) {
+    colEntry = collisions.add(phys, carShape(car.meta, phys.zcg));
+    resetAt(world.spawns[0]);
   }
 }
 
@@ -353,15 +376,27 @@ function buildMenu(tab) {
         `${Math.round(phys.mass)} kg · ${m.stats.drive}`));
     }
   } else if (tab === 'world') {
-    let r = row(body, 'Tageszeit', `<span id="vTime">${fmtTime(hours)}</span>`);
+    let r = row(body, 'Karte');
+    opts(r, Object.entries(MAPS), world.meta.id, async (id) => {
+      if (id === world.meta.id) return;
+      settings.set('map', id);
+      hud.toast(MAPS[id] + ' wird geladen …', 3);
+      togglePause(false);
+      paused = true;
+      try { await loadMap(id); } finally { paused = false; }
+      hud.toast(MAPS[id], 1.6);
+    });
+    r = row(body, 'Tageszeit', `<span id="vTime">${fmtTime(hours)}</span>`);
     range(r, 0, 23.99, 0.05, hours, (v) => { $('vTime').textContent = fmtTime(v); setTime(v); settings.set('timeOfDay', v); });
     check(body, 'Zeit läuft weiter (ein Tag = 24 Minuten)', settings.get('timeFlow'), (v) => settings.set('timeFlow', v));
     body.appendChild(el('p', 'hint', 'Nachts gehen Straßenlaternen, Fenster und Neon an; die Scheinwerfer schalten sich in der Dämmerung ' +
       'automatisch ein (Taste L / Controller X schaltet von Hand). Regen und die Stadt folgen in den nächsten Schritten.'));
-    const b = el('button', 'opt', 'Pylonen wieder aufstellen');
-    b.type = 'button';
-    b.onclick = () => { if (world.props) world.props.resetAll(); };
-    body.appendChild(b);
+    if (world.props) {
+      const b = el('button', 'opt', 'Pylonen wieder aufstellen');
+      b.type = 'button';
+      b.onclick = () => { world.props.resetAll(); };
+      body.appendChild(b);
+    }
   } else if (tab === 'gfx') {
     let r = row(body, 'Lautstärke', `<span id="vVol">${Math.round(settings.get('volume') * 100)} %</span>`);
     range(r, 0, 100, 1, Math.round(settings.get('volume') * 100), (v) => { $('vVol').textContent = v + ' %'; settings.set('volume', v / 100); });
@@ -474,12 +509,9 @@ async function boot() {
   try {
     info.textContent = 'Fahrzeuge …';
     await lib.init();
-    info.textContent = 'Testgelände wird geladen …';
-    world = await World.load('../world/', 'testgelaende', renderer, prog(0, 0.4));
-    scene.add(world.object);
-    sky.setFog(world.meta.env && world.meta.env.fogNear || 250, world.meta.env && world.meta.env.fogFar || 1700);
-    collisions = new Collisions(world.statics);
-    rig.world = world.statics;
+    const mapId = settings.get('map');
+    info.textContent = (MAPS[mapId] || mapId) + ' wird geladen …';
+    await loadMap(mapId, prog(0, 0.4));
     let id = null;
     try { id = localStorage.getItem('neonHaven.lastCar'); } catch (e) { /* egal */ }
     if (!id || !lib.byId[id]) id = CAR_ORDER[0];

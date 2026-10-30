@@ -112,9 +112,12 @@ class Scene:
                 ti = pbr["baseColorTexture"]
                 md["tex"] = image(js["textures"][ti["index"]]["source"])
                 tr = ti.get("extensions", {}).get("KHR_texture_transform", {})
-                md["tex_scale"] = tr.get("scale", [1, 1])[0]
+                md["tex_scale"] = np.array(tr.get("scale", [1, 1]), dtype=np.float64)
+            md["emis_scale"] = 1.0
             if "emissiveTexture" in m:
                 md["emis_tex"] = image(js["textures"][m["emissiveTexture"]["index"]]["source"])
+                tr = m["emissiveTexture"].get("extensions", {}).get("KHR_texture_transform", {})
+                md["emis_scale"] = np.array(tr.get("scale", [1, 1]), dtype=np.float64)
             mats.append(md)
 
         scene = Scene()
@@ -365,6 +368,7 @@ class Renderer:
         emis = np.tile(mat["emissive"], (len(n), 1))
         if mat["emis_tex"] is not None:
             uv = bb0[:, None] * uvs[0] + bb1[:, None] * uvs[1] + bb2[:, None] * uvs[2]
+            uv = uv * mat["emis_scale"]
             tex = mat["emis_tex"]
             th, tw = tex.shape[0], tex.shape[1]
             tu = (np.mod(uv[:, 0], 1.0) * tw).astype(int).clip(0, tw - 1)

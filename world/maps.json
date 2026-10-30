@@ -1,6 +1,11 @@
 {
  "maps": [
   {
+   "id": "neon_haven",
+   "name": "Neon Haven",
+   "file": "neon_haven.json"
+  },
+  {
    "id": "testgelaende",
    "name": "Testgelände",
    "file": "testgelaende.json"

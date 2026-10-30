@@ -13,7 +13,8 @@ export class Hud {
         </div>
         <div class="lamps"><span data-l="abs">ABS</span><span data-l="tcs">ASR</span><span data-l="esc">ESP</span></div>
       </div>
-      <div class="toast"></div>`;
+      <div class="toast"></div>
+      <canvas class="minimap hidden" width="240" height="240"></canvas>`;
     this.cv = root.querySelector('.rpm');
     this.ctx = this.cv.getContext('2d');
     this.spd = root.querySelector('.spd b');
@@ -24,6 +25,51 @@ export class Hud {
     this._toastT = 0;
     this._last = { spd: -1, gear: '', rpm: -1 };
     this.accent = '#00e5ff';
+    this.mmCanvas = root.querySelector('.minimap');
+    this.mmCtx = this.mmCanvas.getContext('2d');
+    this.mm = null;
+    this._mmT = 0;
+    this._mmZoom = 0.7;
+  }
+
+  /** Minikarte der Welt (Bild + Maßstab aus der Karten-JSON) oder null. */
+  setMinimap(src, info) {
+    if (!src || !info) { this.mm = null; this.mmCanvas.classList.add('hidden'); return; }
+    const img = new Image();
+    img.src = src;
+    this.mm = { img, info, ok: false };
+    img.onload = () => { if (this.mm && this.mm.img === img) { this.mm.ok = true; this.mmCanvas.classList.remove('hidden'); } };
+  }
+
+  _drawMinimap(p) {
+    const mm = this.mm;
+    if (!mm || !mm.ok) return;
+    const c = this.mmCtx, W = this.mmCanvas.width, R = W / 2 - 3;
+    const s = mm.info.size / mm.info.span;
+    // Bildpunkt: u = (span/2 − x)·s, v = (span/2 − z)·s (Norden oben, +X links wie aus dem Auto gesehen)
+    const u = (mm.info.span / 2 - p.pos.x) * s, v = (mm.info.span / 2 - p.pos.z) * s;
+    const want = 0.95 - Math.min(0.5, Math.abs(p.speed) / 70);       // bei Tempo weiter herauszoomen
+    this._mmZoom += (want - this._mmZoom) * 0.08;
+    c.clearRect(0, 0, W, W);
+    c.save();
+    c.beginPath(); c.arc(W / 2, W / 2, R, 0, Math.PI * 2); c.clip();
+    c.fillStyle = '#0b0d12'; c.fillRect(0, 0, W, W);
+    c.translate(W / 2, W / 2);
+    c.rotate(p.yaw);                                                  // Fahrtrichtung zeigt nach oben
+    c.scale(this._mmZoom, this._mmZoom);
+    c.translate(-u, -v);
+    c.drawImage(mm.img, 0, 0);
+    c.restore();
+    // Rand, Spieler-Pfeil, Norden
+    c.lineWidth = 3; c.strokeStyle = 'rgba(255,255,255,0.18)';
+    c.beginPath(); c.arc(W / 2, W / 2, R, 0, Math.PI * 2); c.stroke();
+    c.fillStyle = this.accent;
+    c.beginPath(); c.moveTo(W / 2, W / 2 - 13); c.lineTo(W / 2 + 9, W / 2 + 10); c.lineTo(W / 2, W / 2 + 5); c.lineTo(W / 2 - 9, W / 2 + 10);
+    c.closePath(); c.fill();
+    const nx = W / 2 + Math.sin(p.yaw) * (R - 14), ny = W / 2 - Math.cos(p.yaw) * (R - 14);
+    c.fillStyle = 'rgba(0,0,0,0.6)'; c.beginPath(); c.arc(nx, ny, 12, 0, Math.PI * 2); c.fill();
+    c.fillStyle = '#ff5a6a'; c.font = 'bold 17px sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText('N', nx, ny + 1);
   }
 
   setAccent(c) { this.accent = c; this._last.rpm = -1; }
@@ -48,6 +94,8 @@ export class Hud {
     this.lamps.esc.classList.toggle('on', p.escLamp > 0);
     const rpm = p.electric ? Math.min(1, Math.abs(p.speed) / p.vLimit) : Math.min(1.02, p.rpm / (p.redline * 1.08));
     if (Math.abs(rpm - this._last.rpm) > 0.004) { this._drawRpm(rpm, p); this._last.rpm = rpm; }
+    this._mmT += dt;
+    if (this._mmT > 1 / 30) { this._mmT = 0; this._drawMinimap(p); }
   }
 
   _drawRpm(f, p) {

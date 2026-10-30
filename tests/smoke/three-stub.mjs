@@ -201,6 +201,11 @@ export class Mesh extends Object3D { constructor(geometry, material) { super(); 
 export class InstancedMesh extends Mesh {
   constructor(g, m, count) { super(g, m); this.count = count; this.instanceMatrix = { needsUpdate: false, setUsage() {} }; this._mats = []; }
   setMatrixAt(i, m) { if (i >= this.count) throw new Error('Instanz außerhalb'); this._mats[i] = m.elements.slice(); }
+  setColorAt(i, c) {
+    if (i >= this.count) throw new Error('Instanz außerhalb');
+    if (!this.instanceColor) this.instanceColor = { needsUpdate: false, array: new Float32Array(this.count * 3) };
+    this.instanceColor.array.set([c.r, c.g, c.b], i * 3);
+  }
 }
 export class Camera extends Object3D {}
 export class PerspectiveCamera extends Camera {
@@ -237,7 +242,7 @@ export class MeshPhysicalMaterial extends MeshStandardMaterial { constructor(p) 
 export class MeshBasicMaterial extends Material {}
 export class ShaderMaterial extends Material { constructor(p = {}) { super({}); this.uniforms = p.uniforms; this.vertexShader = p.vertexShader; this.fragmentShader = p.fragmentShader; } }
 
-export class Texture { constructor() { this.anisotropy = 1; } dispose() {} }
+export class Texture { constructor() { this.anisotropy = 1; this.offset = new Vector2(); this.repeat = new Vector2(1, 1); } dispose() {} }
 export class CanvasTexture extends Texture { constructor(c) { super(); this.image = c; } }
 
 class Light extends Object3D { constructor(color, intensity = 1) { super(); this.color = new Color(color === undefined ? 0xffffff : color); this.intensity = intensity; } }

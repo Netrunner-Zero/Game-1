@@ -110,6 +110,7 @@ export function installDom(htmlPath, baseDir) {
       } catch (e) { return { ok: false, status: 404, json: async () => ({}) }; }
     },
     __smokeResolve: (url) => path.resolve(baseDir, url),
+    Image: class { set src(v) { this._src = v; setTimeout(() => this.onload && this.onload(), 0); } get src() { return this._src; } },
   });
   return {
     els, winL, raf, store,

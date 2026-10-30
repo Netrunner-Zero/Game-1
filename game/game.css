@@ -74,6 +74,10 @@ button, input, select { font: inherit; color: inherit; }
 }
 .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+.minimap { position: absolute; top: calc(62px + var(--safe-t)); right: calc(12px + var(--safe-r)); width: 124px; height: 124px;
+  border-radius: 50%; box-shadow: 0 2px 14px rgba(0,0,0,.5); }
+@media (max-height: 420px) { .minimap { width: 100px; height: 100px; top: calc(58px + var(--safe-t)); } }
+
 /* ------------------------------------------------------------ Touch-Steuerung */
 .touch { position: fixed; inset: 0; z-index: 5; pointer-events: none; }
 .steer-zone { position: absolute; left: 0; bottom: 0; width: 46%; height: 70%; pointer-events: auto; touch-action: none; }

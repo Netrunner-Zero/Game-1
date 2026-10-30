@@ -207,6 +207,7 @@ def build_all(out_dir):
     imgs["facade_c"], imgs["facade_e"] = facade()
     imgs["checker_c"] = checker()
     imgs["sign_neon_e"] = neon_sign("NEON HAVEN  TESTGELÄNDE", color=(255, 43, 214))
+    build_city(imgs)
     lib = {}
     for name, (fname, fmt) in SHARED.items():
         data = encode(imgs[name], fmt, quality=86)
@@ -226,3 +227,265 @@ def load_lib(out_dir):
         lib[name] = {"file": fname, "mime": "image/jpeg" if fmt == "JPEG" else "image/png", "external": True,
                      "bytes": os.path.getsize(p)}
     return lib
+
+
+# ----------------------------------------------------------------------
+# Stadt: Gehweg, Gras, Fassaden, Ladenzeilen, Leuchtreklame, Werbetafeln, Wasser
+# ----------------------------------------------------------------------
+
+def pavers(size=512, seed=71, n=4):
+    """Gehwegplatten (n × n je Kachel), Fugen dunkel und vertieft."""
+    r = rng(seed)
+    noise = tile_noise(size, 32, seed, octaves=3)
+    cell = size // n
+    col = np.zeros((size, size), np.float32)
+    hgt = np.zeros((size, size), np.float32)
+    for j in range(n):
+        for i in range(n):
+            tone = 0.47 + 0.08 * r.random()
+            col[j * cell:(j + 1) * cell, i * cell:(i + 1) * cell] = tone
+            hgt[j * cell:(j + 1) * cell, i * cell:(i + 1) * cell] = 1.0
+    yy, xx = np.mgrid[0:size, 0:size]
+    joint = ((xx % cell) < 3) | ((yy % cell) < 3)
+    col[joint] = 0.22
+    hgt[joint] = 0.0
+    col = col * (0.88 + 0.24 * noise)
+    rgb = np.stack([col * 1.0, col * 0.99, col * 0.96], -1)
+    hb = np.asarray(Image.fromarray((hgt * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.2)), np.float32) / 255
+    return Image.fromarray((np.clip(rgb, 0, 1) * 255).astype(np.uint8)), height_to_normal(hb + noise * 0.15, strength=2.5)
+
+
+def grass(size=512, seed=81):
+    n1 = tile_noise(size, 6, seed, octaves=5, persistence=0.6)
+    n2 = tile_noise(size, 128, seed + 1, octaves=2, persistence=0.7)
+    g = 0.5 * n1 + 0.5 * n2
+    rgb = np.stack([0.09 + 0.08 * g, 0.20 + 0.14 * g, 0.06 + 0.05 * g], -1)
+    return Image.fromarray((np.clip(rgb, 0, 1) * 255).astype(np.uint8)), height_to_normal(n2, strength=3.0)
+
+
+def _windows(col_img, emi_img, cols, rows, frame, glass, lit_p, palette, r, inset=(0.12, 0.14, 0.12, 0.2), mullion=True):
+    w, h = col_img.size
+    cw, ch = w / cols, h / rows
+    dc, de = ImageDraw.Draw(col_img), ImageDraw.Draw(emi_img)
+    for j in range(rows):
+        floor_lit = r.random() < 0.15        # ganze Etage hell (Büro)
+        for i in range(cols):
+            x0, y0 = i * cw + cw * inset[0], j * ch + ch * inset[1]
+            x1, y1 = (i + 1) * cw - cw * inset[2], (j + 1) * ch - ch * inset[3]
+            g = glass[0] + int(glass[1] * r.random())
+            dc.rectangle([x0, y0, x1, y1], fill=(g, g + 5, g + 14))
+            if mullion:
+                dc.line([(x0 + x1) / 2, y0, (x0 + x1) / 2, y1], fill=frame, width=2)
+            if floor_lit or r.random() < lit_p:
+                c = palette[int(r.random() * len(palette))]
+                k = 0.5 + 0.5 * r.random()
+                de.rectangle([x0 + 1, y0 + 1, x1 - 1, y1 - 1], fill=tuple(int(v * k) for v in c))
+
+
+def facade_glass(size=512, seed=91):
+    """Glasfassade (Büroturm): 4 Achsen × 4 Etagen je Kachel."""
+    r = rng(seed)
+    col = Image.new("RGB", (size, size), (96, 104, 114))
+    emi = Image.new("RGB", (size, size), (0, 0, 0))
+    _windows(col, emi, 4, 4, (120, 128, 138), (34, 22), 0.45,
+             [(200, 225, 255), (235, 240, 255), (170, 205, 255), (255, 236, 200)], r, inset=(0.04, 0.06, 0.04, 0.22))
+    d = ImageDraw.Draw(col)
+    for j in range(4):                         # Brüstungsbänder
+        y = int((j + 1) * size / 4 - size / 4 * 0.2)
+        d.rectangle([0, y, size, y + int(size / 4 * 0.2)], fill=(58, 64, 74))
+    return col, emi
+
+
+def facade_panel(size=512, seed=101):
+    """Putz-/Plattenfassade mit kleinen Fenstern und Klimageräten (Neon-Markt). Grau, wird per Material eingefärbt."""
+    r = rng(seed)
+    n = tile_noise(size, 16, seed, octaves=4)
+    base = (150 + 40 * (n - 0.5)).clip(0, 255).astype(np.uint8)
+    col = Image.fromarray(np.stack([base, base, base], -1))
+    emi = Image.new("RGB", (size, size), (0, 0, 0))
+    _windows(col, emi, 4, 4, (60, 60, 64), (24, 18), 0.5,
+             [(255, 190, 120), (255, 150, 80), (120, 200, 255), (255, 80, 200), (180, 255, 210)], r,
+             inset=(0.2, 0.22, 0.2, 0.3))
+    d = ImageDraw.Draw(col)
+    for k in range(6):                         # Klimageräte, Rohre, Schmutzfahnen
+        x = int(r.random() * size); y = int(r.random() * size)
+        d.rectangle([x, y, x + 26, y + 18], fill=(88, 90, 92))
+        d.line([x + 13, y + 18, x + 13, y + 60], fill=(70, 70, 72), width=2)
+    arr = np.asarray(col, np.float32)
+    streak = tile_noise(size, 24, seed + 5, octaves=2)
+    arr *= (0.85 + 0.15 * streak)[..., None]
+    return Image.fromarray(arr.clip(0, 255).astype(np.uint8)), emi
+
+
+def facade_apart(size=512, seed=111):
+    """Wohnhaus: 3 Achsen × 4 Etagen, Balkonbänder."""
+    r = rng(seed)
+    col = Image.new("RGB", (size, size), (168, 160, 150))
+    emi = Image.new("RGB", (size, size), (0, 0, 0))
+    _windows(col, emi, 3, 4, (210, 205, 198), (30, 16), 0.38,
+             [(255, 200, 130), (255, 180, 110), (255, 220, 170), (200, 220, 255)], r, inset=(0.15, 0.12, 0.15, 0.32))
+    d = ImageDraw.Draw(col)
+    for j in range(4):                         # Balkone: Platte + Geländer
+        y = int((j + 1) * size / 4 - size / 4 * 0.3)
+        d.rectangle([0, y, size, y + 8], fill=(120, 116, 110))
+        for x in range(0, size, 10):
+            d.line([x, y - 26, x, y], fill=(70, 72, 76), width=1)
+        d.line([0, y - 26, size, y - 26], fill=(70, 72, 76), width=2)
+    return col, emi
+
+
+def facade_ware(size=512, seed=121):
+    """Lagerhalle: Trapezblech (senkrechte Sicken), oben ein Fensterband."""
+    xx = np.arange(size)
+    prof = (np.sin(xx / size * 2 * math.pi * 24) > 0.2).astype(np.float32)
+    h = np.tile(prof, (size, 1))
+    n = tile_noise(size, 8, seed, octaves=4)
+    c = 0.62 * (0.8 + 0.2 * h) * (0.85 + 0.3 * (n - 0.5))
+    rgb = np.stack([c, c, c * 1.02], -1)
+    col = Image.fromarray((np.clip(rgb, 0, 1) * 255).astype(np.uint8))
+    emi = Image.new("RGB", (size, size), (0, 0, 0))
+    d, de = ImageDraw.Draw(col), ImageDraw.Draw(emi)
+    d.rectangle([0, 30, size, 74], fill=(40, 46, 54))
+    for x in range(0, size, 64):
+        d.line([x, 30, x, 74], fill=(90, 92, 96), width=3)
+        if (x // 64) % 3 == 0:
+            de.rectangle([x + 3, 32, x + 61, 72], fill=(150, 170, 190))
+    return col, emi, height_to_normal(h * 0.8 + n * 0.1, strength=3.0)
+
+
+def shopfront(w=1024, h=512, seed=131):
+    """Ladenzeile Erdgeschoss: 2 Läden je Kachel (8 m × 4,2 m) mit beleuchteten Schaufenstern."""
+    r = rng(seed)
+    col = Image.new("RGB", (w, h), (36, 36, 40))
+    emi = Image.new("RGB", (w, h), (0, 0, 0))
+    dc, de = ImageDraw.Draw(col), ImageDraw.Draw(emi)
+    tints = [(255, 214, 160), (190, 230, 255), (255, 170, 220), (200, 255, 210), (255, 240, 200)]
+    for k in range(2):
+        x0 = k * w // 2
+        # Schildband oben (dunkel), Rahmen, Schaufenster, Tür
+        dc.rectangle([x0, 0, x0 + w // 2, int(h * 0.2)], fill=(24, 24, 28))
+        dc.rectangle([x0 + 10, int(h * 0.24), x0 + w // 2 - 10, h - 6], fill=(70, 72, 78))
+        t = tints[int(r.random() * len(tints))]
+        dc.rectangle([x0 + 22, int(h * 0.28), x0 + int(w * 0.33), h - 30], fill=(40, 44, 50))
+        de.rectangle([x0 + 22, int(h * 0.28), x0 + int(w * 0.33), h - 30], fill=t)
+        # Regale/Silhouetten im Schaufenster
+        for s in range(5):
+            yy = int(h * 0.38) + s * 34
+            de.line([x0 + 30, yy, x0 + int(w * 0.32), yy], fill=tuple(int(v * 0.55) for v in t), width=5)
+        dc.rectangle([x0 + int(w * 0.36), int(h * 0.3), x0 + w // 2 - 22, h - 6], fill=(30, 30, 34))
+        de.rectangle([x0 + int(w * 0.37), int(h * 0.32), x0 + w // 2 - 24, h - 8], fill=tuple(int(v * 0.6) for v in t))
+    return col, emi
+
+
+NEON = [(255, 43, 214), (0, 229, 255), (122, 92, 255), (255, 138, 0), (57, 255, 20), (255, 225, 77), (255, 31, 61),
+        (240, 240, 255)]
+SIGNS_H = ["RAMEN", "HOTEL NOVA", "ARCADE", "SPÄTI 24/7", "NETRUNNER", "SYNTH BAR", "KLINIK", "PIXEL KINO"]
+SIGNS_V = ["NEON", "BAR", "HOTEL", "SUSHI", "TECH", "CLUB", "ZERO", "OPEN"]
+
+
+def _glow_text(img, box, text, color, vertical=False, seed=0):
+    from carcad.textures import font
+    x0, y0, x1, y1 = box
+    w, h = x1 - x0, y1 - y0
+    layer = Image.new("RGB", (w, h) if not vertical else (h, w), (0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    lw, lh = layer.size
+    size = int(lh * 0.62)
+    f = font(size, "cond")
+    tw = d.textlength(text, font=f)
+    while tw > lw * 0.86 and size > 8:
+        size -= 2
+        f = font(size, "cond")
+        tw = d.textlength(text, font=f)
+    ty = (lh - size) / 2 - size * 0.1
+    glow = Image.new("RGB", layer.size, (0, 0, 0))
+    ImageDraw.Draw(glow).text(((lw - tw) / 2, ty), text, font=f, fill=color)
+    glow = glow.filter(ImageFilter.GaussianBlur(max(3, lh // 14)))
+    d.text(((lw - tw) / 2, ty), text, font=f, fill=tuple(min(255, int(c * 0.55 + 120)) for c in color))
+    # Rahmen aus Neonröhre
+    d.rectangle([4, 4, lw - 5, lh - 5], outline=color, width=3)
+    out = np.maximum(np.asarray(glow, np.float32) * 1.3, np.asarray(layer, np.float32))
+    out = Image.fromarray(np.clip(out, 0, 255).astype(np.uint8))
+    if vertical:
+        out = out.rotate(90, expand=True)
+    img.paste(out, (x0, y0))
+
+
+def signs_atlas(size=1024):
+    """Leuchtreklame: oben 8 waagerechte Schilder (2 × 4 Zellen à 512 × 128),
+    unten 8 senkrechte (8 Zellen à 128 × 512)."""
+    img = Image.new("RGB", (size, size), (0, 0, 0))
+    for i, t in enumerate(SIGNS_H):
+        c, rr = i % 2, i // 2
+        _glow_text(img, (c * 512, rr * 128, c * 512 + 512, rr * 128 + 128), t, NEON[i % len(NEON)])
+    for j, t in enumerate(SIGNS_V):
+        _glow_text(img, (j * 128, 512, j * 128 + 128, 1024), t, NEON[(j + 3) % len(NEON)], vertical=True)
+    return img
+
+
+def billboards(size=1024, seed=141):
+    """Vier große Werbetafeln (je 512 × 512) für Hochhäuser."""
+    from carcad.textures import font
+    r = rng(seed)
+    img = Image.new("RGB", (size, size), (0, 0, 0))
+    ads = [("NEON COLA", "TRINK DAS LICHT", (255, 43, 214), (40, 0, 60)),
+           ("KAI CORP", "DIE ZUKUNFT GEHÖRT UNS", (0, 229, 255), (0, 30, 50)),
+           ("SYNTH-X", "IMPLANTATE · JETZT 0% ZINS", (122, 92, 255), (20, 0, 40)),
+           ("VEKTRA GT", "470 KW · FAHR DIE NACHT", (255, 138, 0), (50, 10, 0))]
+    for k, (title, sub, c, bg) in enumerate(ads):
+        x0, y0 = (k % 2) * 512, (k // 2) * 512
+        cell = Image.new("RGB", (512, 512), bg)
+        d = ImageDraw.Draw(cell)
+        yy = np.linspace(0, 1, 512)[:, None]
+        grad = (np.array(bg)[None, None, :] * (1 - yy[..., None]) + np.array(c)[None, None, :] * 0.35 * yy[..., None])
+        cell = Image.fromarray(np.clip(np.repeat(grad, 512, axis=1), 0, 255).astype(np.uint8))
+        d = ImageDraw.Draw(cell)
+        for s in range(14):                    # Formen
+            cx, cy, rad = r.random() * 512, r.random() * 300, 20 + r.random() * 90
+            d.ellipse([cx - rad, cy - rad, cx + rad, cy + rad], outline=c, width=3)
+        fs = 92
+        f = font(fs, "cond")
+        tw = d.textlength(title, font=f)
+        while tw > 470 and fs > 20:
+            fs -= 4
+            f = font(fs, "cond")
+            tw = d.textlength(title, font=f)
+        d.text(((512 - tw) / 2, 300), title, font=f, fill=(255, 255, 255))
+        f2 = font(30, "cond")
+        tw = d.textlength(sub, font=f2)
+        d.text(((512 - tw) / 2, 410), sub, font=f2, fill=c)
+        d.rectangle([6, 6, 505, 505], outline=c, width=6)
+        img.paste(cell, (x0, y0))
+    return img
+
+
+def water_normal(size=512, seed=151):
+    n = tile_noise(size, 12, seed, octaves=5, persistence=0.55)
+    return height_to_normal(n, strength=6.0)
+
+
+CITY_SHARED = {
+    "pavers_c": ("pavers_c.jpg", "JPEG"), "pavers_n": ("pavers_n.jpg", "JPEG"),
+    "grass_c": ("grass_c.jpg", "JPEG"), "grass_n": ("grass_n.jpg", "JPEG"),
+    "fac_glass_c": ("fac_glass_c.jpg", "JPEG"), "fac_glass_e": ("fac_glass_e.jpg", "JPEG"),
+    "fac_panel_c": ("fac_panel_c.jpg", "JPEG"), "fac_panel_e": ("fac_panel_e.jpg", "JPEG"),
+    "fac_apart_c": ("fac_apart_c.jpg", "JPEG"), "fac_apart_e": ("fac_apart_e.jpg", "JPEG"),
+    "fac_ware_c": ("fac_ware_c.jpg", "JPEG"), "fac_ware_e": ("fac_ware_e.jpg", "JPEG"), "fac_ware_n": ("fac_ware_n.jpg", "JPEG"),
+    "shop_c": ("shop_c.jpg", "JPEG"), "shop_e": ("shop_e.jpg", "JPEG"),
+    "signs_e": ("signs_e.jpg", "JPEG"), "billboards_e": ("billboards_e.jpg", "JPEG"),
+    "water_n": ("water_n.jpg", "JPEG"),
+}
+SHARED.update(CITY_SHARED)
+
+
+def build_city(imgs):
+    imgs["pavers_c"], imgs["pavers_n"] = pavers()
+    imgs["grass_c"], imgs["grass_n"] = grass()
+    imgs["fac_glass_c"], imgs["fac_glass_e"] = facade_glass()
+    imgs["fac_panel_c"], imgs["fac_panel_e"] = facade_panel()
+    imgs["fac_apart_c"], imgs["fac_apart_e"] = facade_apart()
+    imgs["fac_ware_c"], imgs["fac_ware_e"], imgs["fac_ware_n"] = facade_ware()
+    imgs["shop_c"], imgs["shop_e"] = shopfront()
+    imgs["signs_e"] = signs_atlas()
+    imgs["billboards_e"] = billboards()
+    imgs["water_n"] = water_normal()

@@ -9,6 +9,8 @@ register('./hooks.mjs', import.meta.url);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const { installDom } = await import('./dom.mjs');
 const env = installDom(path.join(root, 'game/index.html'), path.join(root, 'game'));
+// Fahrtests auf dem freien Testgelände beginnen, die Stadt kommt danach über das Menü
+localStorage.setItem('neonHaven.settings.v1', JSON.stringify({ map: 'testgelaende' }));
 let failures = 0;
 const check = (c, m) => { console.log((c ? '   ✓ ' : '   ✗ ') + m); if (!c) failures++; };
 process.on('unhandledRejection', (e) => { console.log('   ✗ Unbehandelter Fehler: ' + (e && e.stack || e)); failures++; });
@@ -109,6 +111,35 @@ for (const b of carBtns.slice(1)) {
 $('bClose').onclick();
 await env.frames(2);
 check(!G.paused, 'Menü geschlossen, weiter');
+// Karte wechseln: in die Stadt
+const openMap = async (re) => {
+  env.key('keydown', 'Escape'); await env.frames(2);
+  tabs.find((t) => t.dataset.tab === 'world').onclick();
+  $('menuBody').querySelectorAll('.opt').find((b) => re.test(b.innerHTML)).onclick();
+  for (let i = 0; i < 80; i++) { await env.frames(2); if (!G.paused && !$('menu').open) break; }
+  await env.frames(10);
+};
+await openMap(/Neon Haven/);
+check(G.world.meta.id === 'neon_haven' && Math.abs(G.phys.pos.z - G.world.spawns[0].z) < 1 && G.world.groundHeight(G.phys.pos.x, G.phys.pos.z) === 0,
+  'Karte gewechselt: Neon Haven, Auto am Startplatz auf der Straße');
+env.key('keydown', 'KeyW'); await env.frames(150); env.key('keyup', 'KeyW');
+check(G.phys.speedKmh > 40 && Math.abs(G.phys.pos.x - G.world.spawns[0].x) < 1, `Stadt: Boulevard geradeaus (${G.phys.speedKmh.toFixed(0)} km/h)`);
+G.rig.setMode('chase'); await env.frames(5);
+{
+  const c = G.rig.camera.position;
+  const along = (c.x - G.phys.pos.x) * Math.sin(G.phys.yaw) + (c.z - G.phys.pos.z) * Math.cos(G.phys.yaw);
+  check(along < -3, `Stadt: Verfolgerkamera hinter dem Auto (${along.toFixed(2)} m), Masten ziehen sie nicht heran`);
+}
+// Ampeln schalten
+{
+  const s = G.world.signal;
+  const before = Array.from(s.state);
+  await env.frames(60 * 17);
+  const changed = before.some((v, i) => v !== s.state[i]);
+  check(s && s.heads.length > 100 && changed, `Ampeln: ${s.heads.length} Köpfe, schalten nach 17 s um`);
+}
+await openMap(/Testgelände/);
+check(G.world.meta.id === 'testgelaende', 'zurück aufs Testgelände');
 // Nacht
 G.setTime(22.5);
 await env.frames(30);
