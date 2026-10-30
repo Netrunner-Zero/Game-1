@@ -129,18 +129,27 @@ input[type=range] { width: 100%; accent-color: var(--accent); }
   .logo { font-size: 14px; }
   .sub { font-size: 9px; }
   #carTitle { font-size: 16px; }
-  #carClass { font-size: 11px; }
+  #carClass { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .icon { min-width: 38px; height: 38px; }
   .icon.wide { min-width: 70px; }
+  .demo { width: calc(100% - 16px); bottom: calc(8px + var(--safe-b)); padding: 8px 10px; }
+  .stats { gap: 12px; font-size: 11px; flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start;
+    scrollbar-width: none; white-space: nowrap; }
+  .stats::-webkit-scrollbar { display: none; }
+  .stats b { font-size: 13px; }
+  .controls { gap: 6px; }
+  .ctl { min-width: 46%; flex: 1 1 46%; }
+  .chip { padding: 7px 10px; }
   .carlist { left: 0; right: 0; top: auto; bottom: calc(150px + var(--safe-b)); width: auto; flex-direction: row;
-    overflow-x: auto; padding: 0 10px; max-height: none; }
-  .car { min-width: 150px; }
-  .tuning { left: 10px; right: 10px; width: auto; top: auto; bottom: calc(150px + var(--safe-b)); max-height: 46%; }
+    overflow-x: auto; padding: 0 8px; max-height: none; scrollbar-width: none; }
+  .carlist::-webkit-scrollbar { display: none; }
+  .car { min-width: 142px; padding: 8px 10px; }
+  .car b { font-size: 14px; }
+  /* Tuning: eingeklappt als Knopf oben rechts, aufgeklappt als Blatt über der Steuerung */
+  .tuning { left: 8px; right: 8px; width: auto; top: auto; bottom: calc(150px + var(--safe-b)); max-height: 52%; }
+  .tuning.collapsed { left: auto; right: 10px; top: 58px; bottom: auto; }
+  .tuning.collapsed .panel-head { padding: 6px 12px; gap: 8px; cursor: pointer; }
   .tuning.collapsed .tabs, .tuning.collapsed .tab-body { display: none; }
   body.tuning-open .carlist { display: none; }
-  .demo { width: calc(100% - 20px); bottom: calc(8px + var(--safe-b)); padding: 8px 10px; }
-  .stats { gap: 10px; font-size: 11px; }
-  .stats b { font-size: 13px; }
-  .ctl { min-width: 120px; }
-  .perf { top: 56px; left: 10px; }
+  .perf { top: 104px; left: 10px; }
 }

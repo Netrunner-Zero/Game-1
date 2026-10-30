@@ -231,10 +231,9 @@ function updateStats() {
   const cage = (m.tuning && m.tuning.cage && m.tuning.cage[t.cage]) || {};
   const mass = m.stats.massKg + (cage.massKg || 0);
   const ps = Math.round(kw * 1.35962);
-  // grobe Schätzung 0–100 km/h aus Leistungsgewicht und Antrieb
-  const pw = kw / mass;
-  const trac = m.stats.drive === 'AWD' ? 0.86 : m.stats.drive === 'RWD' ? 1.0 : 1.12;
-  const t100 = Math.max(2.1, (1.05 / Math.pow(pw, 0.72)) * trac * 0.42);
+  // Schätzung 0–100 km/h aus Leistungsgewicht und Antrieb (an echten Autos abgeglichen)
+  const trac = m.stats.drive === 'AWD' ? 0.9 : m.stats.drive === 'RWD' ? 1.0 : 1.12;
+  const t100 = Math.max(1.8, 1.444 * Math.pow(mass / kw, 0.7) * trac);
   $('stats').innerHTML =
     `<span>Leistung<b>${kw} kW · ${ps} PS</b></span><span>Gewicht<b>${mass} kg</b></span>` +
     `<span>0–100<b>≈ ${t100.toFixed(1)} s</b></span><span>Vmax<b>${m.stats.topSpeedKmh} km/h</b></span>` +
@@ -402,12 +401,17 @@ function buildTab(tab) {
 }
 
 document.querySelectorAll('.tab').forEach((b) => (b.onclick = () => buildTab(b.dataset.tab)));
-$('btnTuneToggle').onclick = () => {
+function toggleTuning(force) {
   const t = $('tuning');
-  t.classList.toggle('collapsed');
-  document.body.classList.toggle('tuning-open', !t.classList.contains('collapsed'));
-  $('btnTuneToggle').textContent = t.classList.contains('collapsed') ? '▴' : '▾';
-};
+  const collapse = force !== undefined ? force : !t.classList.contains('collapsed');
+  t.classList.toggle('collapsed', collapse);
+  document.body.classList.toggle('tuning-open', !collapse);
+  $('btnTuneToggle').textContent = collapse ? '▴' : '▾';
+}
+$('btnTuneToggle').onclick = (e) => { e.stopPropagation(); toggleTuning(); };
+document.querySelector('.tuning .panel-head').addEventListener('click', () => {
+  if ($('tuning').classList.contains('collapsed')) toggleTuning(false);
+});
 if (window.innerWidth <= 820) {
   $('tuning').classList.add('collapsed');
   $('btnTuneToggle').textContent = '▴';

@@ -100,9 +100,11 @@ export class Vehicle {
     this.materialList = [...mats.values()];
     this.mat = {};
     for (const m of this.materialList) this.mat[m.name] = m;
-    // Karosserieteile (für Tieferlegung): alles außer Rädern, Bremssätteln und Kontaktschatten
+    // Karosserieteile (für Tieferlegung): alles außer Rädern, Bremssätteln und Kontaktschatten.
+    // gltf.scene enthält genau einen Wurzelknoten (das Auto); dessen Kinder sind die Bauteile.
+    this.carRoot = this.root.children.length === 1 ? this.root.children[0] : this.root;
     const isWheel = new Set([...this.wheels.map((w) => w.obj), ...this.calipers.map((c) => c.obj)]);
-    this.bodyNodes = this.root.children.filter((c) => !isWheel.has(c) && c !== this.shadow);
+    this.bodyNodes = this.carRoot.children.filter((c) => !isWheel.has(c) && c !== this.shadow);
     for (const n of this.bodyNodes) n.userData.baseY = n.position.y;
     this._prepareMaterials();
   }
@@ -112,8 +114,7 @@ export class Vehicle {
       const u = m.userData || {};
       m.userData.baseEmissive = u.base !== undefined ? u.base : m.emissiveIntensity;
       if (m.name === 'Paint' || m.name === 'Paint2') m.userData.flakes = m.normalMap || null;
-      if (m.transparent || m.name === 'Glass' || m.name.endsWith('Glass') || m.name === 'Crystal' || m.name === 'Bottle') {
-        m.transparent = true;
+      if (m.transparent) {                       // glTF alphaMode BLEND (Scheiben, Lampengläser, Deko-Glas)
         m.depthWrite = false;
         if (m.name === 'Glass') m.side = THREE.DoubleSide;
       }
@@ -184,7 +185,12 @@ export class Vehicle {
       }
       m.normalMap = fin.flakes > 0 ? m.userData.flakes : null;
       if (m.normalMap) m.normalScale.set(0.18 * fin.flakes, 0.18 * fin.flakes);
-      m.needsUpdate = true;
+      // Shader nur neu übersetzen, wenn sich die benötigten Funktionen ändern (sonst ruckelt das Tuning)
+      const feat = `${!!m.normalMap}|${m.clearcoat > 0}|${m.iridescence > 0}`;
+      if (m.userData.feat !== feat) {
+        m.userData.feat = feat;
+        m.needsUpdate = true;
+      }
     }
     for (const o of this.tune.rim) o.visible = o.userData.variant === T.rim;
     if (this.mat.Rim) this.mat.Rim.color.set(T.rimColor);
@@ -213,7 +219,6 @@ export class Vehicle {
       const k = THREE.MathUtils.clamp(T.tint, 0, 1);
       g.opacity = 0.14 + 0.78 * k;
       g.color.copy(g.userData.baseColor).multiplyScalar(1.0 - 0.6 * k);
-      g.needsUpdate = true;
     }
     const low = THREE.MathUtils.clamp(T.lowering, 0, this.meta.maxLoweringCm || 4) / 100;
     for (const n of this.bodyNodes) n.position.y = n.userData.baseY - low;
