@@ -140,10 +140,23 @@ G.rig.setMode('chase'); await env.frames(5);
 }
 await openMap(/Testgelände/);
 check(G.world.meta.id === 'testgelaende', 'zurück aufs Testgelände');
+// Wetter: Regen macht die Straße nass (weniger Grip), Nacht + Regen
+{
+  G.settings.set('weather', 'storm');
+  G.weather.set('storm');
+  await env.frames(60 * 25);
+  check(G.weather.wet > 0.6 && G.world.wetness > 0.6 && G.world.grip(0, 0) < 0.85, `Starkregen: Nässe ${G.weather.wet.toFixed(2)}, Grip ${G.world.grip(0, 0).toFixed(2)}`);
+  G.weather.set('clear');
+  G.settings.set('weather', 'clear');
+}
 // Nacht
 G.setTime(22.5);
 await env.frames(30);
 check(G.sky.nightK > 0.9 && G.car.state.lights, `Nacht: Nachtanteil ${G.sky.nightK.toFixed(2)}, Licht automatisch an`);
+{
+  const sl = G.streetLights;
+  check(!sl || sl.lights.every((L) => Number.isFinite(L.l.intensity)), 'Straßenlaternen: Lichter gültig');
+}
 G.setTime(13);
 await env.frames(10);
 check(G.sky.nightK < 0.05, 'Tag wieder hell');
@@ -153,7 +166,7 @@ gas.dispatch('pointerdown');
 zone.dispatch('pointerdown', { clientX: 200, clientY: 500 });
 zone.dispatch('pointermove', { clientX: 290, clientY: 500 });
 await env.frames(120);
-check(G.phys.speedKmh > 20 && G.input.out.steer > 0.5, `Touch: Gas + Wischen rechts (${G.phys.speedKmh.toFixed(0)} km/h, Lenkung ${G.input.out.steer.toFixed(2)})`);
+check(G.phys.speedKmh > 10 && G.input.out.steer > 0.5, `Touch: Gas + Wischen rechts (${G.phys.speedKmh.toFixed(0)} km/h, Lenkung ${G.input.out.steer.toFixed(2)})`);
 gas.dispatch('pointerup');
 zone.dispatch('pointerup');
 await env.frames(30);

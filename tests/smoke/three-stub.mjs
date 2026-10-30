@@ -25,6 +25,8 @@ export class Vector3 {
   clone() { return new Vector3(this.x, this.y, this.z); }
   add(v) { this.x += v.x; this.y += v.y; this.z += v.z; return this; }
   sub(v) { this.x -= v.x; this.y -= v.y; this.z -= v.z; return this; }
+  subVectors(a, b) { return this.set(a.x - b.x, a.y - b.y, a.z - b.z); }
+  addVectors(a, b) { return this.set(a.x + b.x, a.y + b.y, a.z + b.z); }
   addScaledVector(v, s) { this.x += v.x * s; this.y += v.y * s; this.z += v.z * s; return this; }
   multiplyScalar(s) { this.x *= s; this.y *= s; this.z *= s; return this; }
   divideScalar(s) { return this.multiplyScalar(1 / s); }
@@ -282,3 +284,8 @@ export class PMREMGenerator {
   fromScene() { return { texture: new Texture(), dispose() {} }; }
 }
 export class GridHelper extends Object3D { constructor() { super(); this.material = new MeshBasicMaterial(); } }
+export const AdditiveBlending = 2, NormalBlending = 1;
+export class BufferAttribute { constructor(a, n) { this.array = a; this.itemSize = n; this.count = a.length / n; } }
+export class LineSegments extends Object3D { constructor(g, m) { super(); this.geometry = g; this.material = m; } }
+export class PlaneGeometry extends BufferGeometry { rotateX() { return this; } }
+BufferGeometry.prototype.setDrawRange = function (a, b) { this.drawRange = { start: a, count: b }; };

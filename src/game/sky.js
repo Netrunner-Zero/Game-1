@@ -99,8 +99,24 @@ export class SkySystem {
     g.rotation.x = -Math.PI / 2;
     g.position.y = -1.6;
     this.envScene.add(g);
+    // Neonleisten rund um den Horizont: nachts spiegeln sich bunte Lichter in Lack und nasser Straße
+    this.envNeon = [];
+    const neon = [0xff2bd6, 0x00e5ff, 0x7a5cff, 0xff8a00, 0x00e5ff, 0xff2bd6, 0xffd27a, 0x7a5cff];
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2 + 0.2;
+      const c = new THREE.Color(neon[i % neon.length]);
+      const m = new THREE.Mesh(new THREE.BoxGeometry(8 + (i % 3) * 6, 0.5 + (i % 4) * 0.4, 0.5), new THREE.MeshBasicMaterial({ color: 0x000000 }));
+      m.position.set(Math.cos(a) * 40, 1.5 + (i % 5) * 2.2, Math.sin(a) * 40);
+      m.lookAt(0, m.position.y, 0);
+      m.userData.c = c;
+      this.envScene.add(m);
+      this.envNeon.push(m);
+    }
     this.pmrem = new THREE.PMREMGenerator(renderer);
     this.envRT = null;
+    this.cloud = 0;
+    this.rainK = 0;
+    this.envCloud = 0;
     this.hours = -1;
     this.envHours = -99;
     this.nightK = 0;
@@ -121,11 +137,24 @@ export class SkySystem {
     this.scene.fog.far = far * (1 + 0.9 * this.nightK);
   }
 
+  /** Bewölkung 0..1 und Regen 0..1 (vom Wetter). */
+  setWeather(cloud, rain) {
+    if (Math.abs(cloud - this.cloud) < 0.004 && Math.abs(rain - this.rainK) < 0.004) return;
+    this.cloud = cloud;
+    this.rainK = rain;
+    if (this.hours >= 0) this._apply(false);
+  }
+
   /** Tageszeit in Stunden (0..24). */
   setTime(hours, force = false) {
     hours = ((hours % 24) + 24) % 24;
     if (!force && Math.abs(hours - this.hours) < 1e-4) return;
     this.hours = hours;
+    this._apply(force);
+  }
+
+  _apply(force) {
+    const hours = this.hours;
     // Sonnenbahn: Aufgang 6:00, Untergang 20:00, Höchststand 13:00 (~60°)
     const dayT = (hours - 6) / 14;
     const el = dayT >= 0 && dayT <= 1 ? Math.sin(Math.PI * dayT) * 1.05 : -Math.sin(Math.PI * Math.min(1, Math.abs(dayT < 0 ? (hours + 4) / 10 : (hours - 20) / 10))) * 0.6;
@@ -142,36 +171,49 @@ export class SkySystem {
     else if (elDeg > -8) { A = P.night; B = P.dusk; t = smooth(-8, 2, elDeg); }
     else { A = P.night; B = P.night; t = 1; }
     const u = this.uniforms;
+    const cl = this.cloud;
     u.uZenith.value.copy(lerpC(A.zenith, B.zenith, t));
     u.uHorizon.value.copy(lerpC(A.horizon, B.horizon, t));
     u.uGround.value.copy(lerpC(A.ground, B.ground, t));
-    const night = 1 - smooth(-7, 4, elDeg);
+    // Bewölkung: Himmel grau und gleichmäßig, Helligkeit folgt der Tageszeit
+    const lum = (c) => 0.3 * c.r + 0.55 * c.g + 0.15 * c.b;
+    const greyZ = lum(u.uHorizon.value) * 0.72, greyH = lum(u.uHorizon.value) * 0.8;
+    u.uZenith.value.lerp(new THREE.Color(greyZ * 0.95, greyZ, greyZ * 1.06), cl);
+    u.uHorizon.value.lerp(new THREE.Color(greyH * 0.96, greyH, greyH * 1.04), cl);
+    const night = 1 - smooth(-7, 4 + 6 * cl, elDeg);
     this.nightK = night;
-    u.uSunColor.value.copy(lerpC(A.sun, B.sun, t)).multiplyScalar(1 - night);
+    u.uSunColor.value.copy(lerpC(A.sun, B.sun, t)).multiplyScalar((1 - night) * (1 - 0.92 * cl));
     u.uSunDir.value.copy(sunDir);
     u.uMoonDir.value.copy(moonDir);
-    u.uSunDisc.value = smooth(-2, 3, elDeg);
-    u.uNight.value = night;
+    u.uSunDisc.value = smooth(-2, 3, elDeg) * (1 - cl);
+    u.uNight.value = night * (1 - cl);
     u.uCityGlow.value = night * 0.9;
     // Licht: über dem Horizont die Sonne, sonst der Mond
     const lightDir = elDeg > -3 ? sunDir : moonDir;
     this.lightDir = lightDir.clone();
     this.sun.color.copy(night > 0.7 ? P.night.sun : lerpC(A.sun, B.sun, t));
-    this.sun.intensity = night > 0.7 ? P.night.sunI : THREE.MathUtils.lerp(A.sunI, B.sunI, t) * smooth(-3, 4, elDeg) + P.night.sunI * night;
+    const sunI = night > 0.7 ? P.night.sunI : THREE.MathUtils.lerp(A.sunI, B.sunI, t) * smooth(-3, 4, elDeg) + P.night.sunI * night;
+    this.sun.intensity = sunI * (1 - 0.8 * cl);
     this.hemi.color.copy(lerpC(A.hemiSky, B.hemiSky, t));
     this.hemi.groundColor.copy(lerpC(A.hemiGround, B.hemiGround, t));
-    this.hemi.intensity = THREE.MathUtils.lerp(A.hemiI, B.hemiI, t);
+    // bei Wolken kommt das Licht gleichmäßig von oben (mehr Himmelslicht, weiche Schatten)
+    this.hemi.intensity = THREE.MathUtils.lerp(A.hemiI, B.hemiI, t) * (1 + 1.6 * cl * (1 - night));
+    this.sun.shadow.radius = 2 + 6 * cl;
     // Nebel in Horizontfarbe (nachts mit etwas Stadtglühen)
     this.scene.fog.color.copy(u.uHorizon.value).lerp(u.uCityColor.value, night * 0.25);
-    // nachts klarere Sicht (sonst verschwinden die Lichter der Stadt im Dunst)
-    this.scene.fog.near = this.fogNear * (1 + 0.6 * night);
-    this.scene.fog.far = this.fogFar * (1 + 0.9 * night);
+    // nachts klarere Sicht (sonst verschwinden die Lichter der Stadt im Dunst), bei Regen dichter Dunst
+    const rain = this.rainK;
+    this.scene.fog.near = this.fogNear * (1 + 0.6 * night) * (1 - 0.7 * rain) * (1 - 0.25 * cl);
+    this.scene.fog.far = this.fogFar * (1 + 0.9 * night) * (1 - 0.62 * rain) * (1 - 0.2 * cl);
     this.envGroundMat.color.copy(u.uGround.value).multiplyScalar(0.8);
-    if (force || Math.abs(hours - this.envHours) > 0.2) this.updateEnv();
+    // Spiegelungen der Stadtlichter (nachts): Neon-Leisten in der Umgebungstextur
+    for (const m of this.envNeon) m.material.color.copy(m.userData.c).multiplyScalar(4.0 * night);
+    if (force || Math.abs(hours - this.envHours) > 0.2 || Math.abs(cl - this.envCloud) > 0.12) this.updateEnv();
   }
 
   updateEnv() {
     this.envHours = this.hours;
+    this.envCloud = this.cloud;
     const old = this.envRT;
     this.envRT = this.pmrem.fromScene(this.envScene, 0, 0.1, 200);
     this.scene.environment = this.envRT.texture;

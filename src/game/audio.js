@@ -96,6 +96,11 @@ export class CarAudio {
     const tb = ctx.createBiquadFilter(); tb.type = 'bandpass'; tb.frequency.value = 1150; tb.Q.value = 4;
     this.tireF = tb;
     loopNoise().connect(tb).connect(this.tire).connect(this.master);
+    // Regen: breites Rauschen (oben gedämpft), leises Prasseln
+    this.rainG = ctx.createGain(); this.rainG.gain.value = 0;
+    const rl = ctx.createBiquadFilter(); rl.type = 'lowpass'; rl.frequency.value = 3200;
+    const rh = ctx.createBiquadFilter(); rh.type = 'highpass'; rh.frequency.value = 420;
+    loopNoise().connect(rh).connect(rl).connect(this.rainG).connect(this.master);
     this.wind = ctx.createGain(); this.wind.gain.value = 0;
     const wl = ctx.createBiquadFilter(); wl.type = 'lowpass'; wl.frequency.value = 520;
     loopNoise().connect(wl).connect(this.wind).connect(this.master);
@@ -160,10 +165,20 @@ export class CarAudio {
       slide = Math.max(slide, Math.hypot(sx, sy) - 0.85);
     }
     const sq = Math.min(1, Math.max(0, slide) * 1.2) * Math.min(1, speed / 4);
-    this.tire.gain.setTargetAtTime(sq * 0.22, t, 0.05);
-    this.tireF.frequency.setTargetAtTime(900 + Math.min(speed, 40) * 12, t, 0.1);
+    // nasse Straße: Zischen der Reifen statt Quietschen
+    const hiss = (this.wet || 0) * Math.min(1, speed / 25);
+    this.tire.gain.setTargetAtTime(Math.max(sq * 0.22 * (1 - 0.6 * (this.wet || 0)), hiss * 0.07), t, 0.05);
+    this.tireF.frequency.setTargetAtTime(hiss > sq ? 520 + speed * 6 : 900 + Math.min(speed, 40) * 12, t, 0.1);
     const ws = Math.min(1, speed / 70);
     this.wind.gain.setTargetAtTime(ws * ws * 0.22, t, 0.2);
+  }
+
+  /** Regenstärke 0..1. */
+  setRain(r) {
+    if (!this.ctx || !this.rainG) return;
+    if (Math.abs((this._rain || 0) - r) < 0.01) return;
+    this._rain = r;
+    this.rainG.gain.setTargetAtTime(r * 0.16, this.ctx.currentTime, 0.4);
   }
 
   /** Aufprall (0..1). */

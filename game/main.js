@@ -16,6 +16,8 @@ import { CameraRig, CAMERAS } from '../src/game/cameras.js';
 import { Hud } from '../src/game/hud.js';
 import { SkySystem } from '../src/game/sky.js';
 import { CarAudio } from '../src/game/audio.js';
+import { Weather, WEATHERS } from '../src/game/weather.js';
+import { StreetLights } from '../src/game/nightlights.js';
 
 const $ = (id) => document.getElementById(id);
 const TUNE_KEY = 'neonHaven.tuning.v1';
@@ -47,6 +49,11 @@ rig.setMode(settings.get('camera'));
 const hud = new Hud($('hud'));
 const audio = new CarAudio();
 audio.setVolume(settings.get('volume'));
+const weather = new Weather(scene, { drops: { low: 2500, medium: 5000, high: 8000 }[settings.resolvedQuality()] });
+weather.set(settings.get('weather'));
+weather.snap();
+let streetLights = null;
+let weatherTimer = 200 + Math.random() * 200;
 
 let world = null;
 let collisions = null;
@@ -84,7 +91,7 @@ function applyQuality() {
   }
   resize();
   if (car) car.setQuality(Q);
-  if (world) world.setQuality(Q);
+  if (world) { world.setQuality(Q); makeStreetLights(); }
   scene.traverse((o) => { if (o.material && !Array.isArray(o.material)) o.material.needsUpdate = true; });
 }
 
@@ -160,6 +167,13 @@ async function spawnCar(id, at, onProgress) {
 
 const MAPS = { neon_haven: 'Neon Haven', testgelaende: 'Testgelände' };
 
+// echte Lichter an den nächsten Laternen: Anzahl je Qualität fest (Niedrig 0, Mittel 4, Hoch 8)
+function makeStreetLights() {
+  if (streetLights) streetLights.dispose();
+  const n = { low: 0, medium: 4, high: 8 }[settings.resolvedQuality()];
+  streetLights = new StreetLights(scene, world ? world.lampHeads : [], world ? world.groundHeight : () => 0, n);
+}
+
 /** Karte laden (beim Start oder aus dem Menü); das Auto kommt an den ersten Startplatz. */
 async function loadMap(id, onProgress) {
   const w = await World.load('../world/', id, renderer, onProgress);
@@ -173,6 +187,7 @@ async function loadMap(id, onProgress) {
   collisions = new Collisions(world.statics);
   rig.world = world.statics;
   hud.setMinimap(world.meta.minimap ? '../world/' + world.meta.minimap.file : null, world.meta.minimap || null);
+  makeStreetLights();
   zoneShown = '';
   if (phys) {
     colEntry = collisions.add(phys, carShape(car.meta, phys.zcg));
@@ -389,8 +404,12 @@ function buildMenu(tab) {
     r = row(body, 'Tageszeit', `<span id="vTime">${fmtTime(hours)}</span>`);
     range(r, 0, 23.99, 0.05, hours, (v) => { $('vTime').textContent = fmtTime(v); setTime(v); settings.set('timeOfDay', v); });
     check(body, 'Zeit läuft weiter (ein Tag = 24 Minuten)', settings.get('timeFlow'), (v) => settings.set('timeFlow', v));
+    r = row(body, 'Wetter');
+    opts(r, Object.entries(WEATHERS).map(([k, w]) => [k, w.label]), weather.kind, (v) => { settings.set('weather', v); weather.set(v); });
+    check(body, 'Wetter wechselt von selbst', settings.get('weatherAuto'), (v) => settings.set('weatherAuto', v));
     body.appendChild(el('p', 'hint', 'Nachts gehen Straßenlaternen, Fenster und Neon an; die Scheinwerfer schalten sich in der Dämmerung ' +
-      'automatisch ein (Taste L / Controller X schaltet von Hand). Regen und die Stadt folgen in den nächsten Schritten.'));
+      'automatisch ein (Taste L / Controller X schaltet von Hand). Bei Regen wird die Straße nass und spiegelt, ' +
+      'die Reifen haben weniger Grip – früher bremsen!'));
     if (world.props) {
       const b = el('button', 'opt', 'Pylonen wieder aufstellen');
       b.type = 'button';
@@ -479,6 +498,19 @@ function frame() {
   car.updateLOD(camera, Q.lodDistances, rig.attached);
   rig.update(dt, car, phys, started && !paused ? inp : { lookX: 0, lookY: 0, lookBack: false }, camera.aspect);
   sky.follow(phys.pos);
+  weather.update(dt, camera, world, sky, audio);
+  if (streetLights) streetLights.update(dt, phys.pos, { x: Math.sin(phys.yaw), z: Math.cos(phys.yaw) }, sky.nightK, weather.wet);
+  applyLook();
+  if (car && !lightsManual && (sky.nightK > 0.35) !== lightsOn) setLights(sky.nightK > 0.35, false);
+  if (started && !paused && settings.get('weatherAuto')) {
+    weatherTimer -= dt;
+    if (weatherTimer <= 0) {
+      weatherTimer = 180 + Math.random() * 240;
+      const r = Math.random();
+      const next = r < 0.4 ? 'clear' : r < 0.65 ? 'cloudy' : r < 0.9 ? 'rain' : 'storm';
+      if (next !== weather.kind) { weather.set(next); settings.set('weather', next); hud.toast('Wetter: ' + WEATHERS[next].label, 2.2); }
+    }
+  }
   hud.update(dt, phys);
   audio.update(dt, phys, started && !paused ? inp : {});
   const zone = world.zoneAt(phys.pos.x, phys.pos.z) || world.meta.name;
@@ -556,7 +588,8 @@ document.addEventListener('visibilitychange', () => {
 
 // Zugriff für die Browser-Konsole und den Rauchtest (tests/smoke)
 window.neonHaven = {
-  settings, input, rig, sky, hud, audio,
+  settings, input, rig, sky, hud, audio, weather,
+  get streetLights() { return streetLights; },
   get world() { return world; }, get car() { return car; }, get phys() { return phys; },
   get started() { return started; }, get paused() { return paused; }, get hours() { return hours; },
   spawnCar, resetCar, setTime,
