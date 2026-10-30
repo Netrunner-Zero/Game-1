@@ -730,3 +730,54 @@ def light_bar(ctx, z, w=1.2, h=0.07, part="Roof", y_off=0.06):
         p.lathe([(0.0, 0.0), (0.0, 0.016)], 10, "Headlight", center=(x, y, z + 0.035), axis="z", inside=(-0.01, 0.0))
     for sx in (1, -1):
         p.box((sx * w * 0.42, y - h / 2 - 0.03, z - 0.01), (0.03, 0.06, 0.03), "Trim")
+
+
+# ----------------------------------------------------------------------
+# Linien auf Front-/Heckflächen, aufgesetzte Lüftungsschlitze
+# ----------------------------------------------------------------------
+
+def face_line(ctx, pts, rear=True, width=0.0045, mat="Gap", part="Trim", lift=0.0015, step=0.02):
+    """Fuge/Zierlinie auf der Front- oder Heckfläche. pts = [(x, y), ...] als Polylinie;
+    jeder Punkt wird von vorne bzw. hinten auf die Haut projiziert."""
+    dense = []
+    for a, b_ in zip(pts[:-1], pts[1:]):
+        L = math.hypot(b_[0] - a[0], b_[1] - a[1])
+        k = max(1, int(math.ceil(L / step)))
+        for i in range(k):
+            t = i / k
+            dense.append((a[0] + (b_[0] - a[0]) * t, a[1] + (b_[1] - a[1]) * t))
+    dense.append(tuple(pts[-1]))
+    P, N = [], []
+    for (x, y) in dense:
+        h = ctx.hit_rear(x, y) if rear else ctx.hit_front(x, y)
+        if h is None:
+            continue
+        P.append(h[0] + h[1] * lift)
+        N.append(h[1])
+    p = ctx.part(part)
+    for i in range(len(P) - 1):
+        d = P[i + 1] - P[i]
+        if np.linalg.norm(d) < 1e-6:
+            continue
+        t = norm(d)
+        s0 = norm(np.cross(N[i], t)) * width / 2
+        s1 = norm(np.cross(N[i + 1], t)) * width / 2
+        p.quad(P[i] - s0, P[i] + s0, P[i + 1] + s1, P[i + 1] - s1, mat, normals=[N[i], N[i], N[i + 1], N[i + 1]],
+               outward=N[i] + N[i + 1])
+
+
+def raised_vent_local(w, l, n, lod=0, frame_mat="BlackGloss", slat_mat="BlackGloss", angle=10.0):
+    """Aufgesetzter Lüftungsschlitz (liegt auf dem Blech, braucht kein Loch in der Haut)."""
+    p = Part("vent")
+    o = rr_outline(w, l, min(w, l) * 0.18, 4)
+    od = densify(o, 0.012)
+    secs = [[np.array([u * s_, v * s_, wv]) for (u, v) in od] for (wv, s_) in ((-0.003, 1.0), (0.007, 0.985),
+                                                                              (0.009, 0.94))]
+    p.loft(secs, lambda k, j: frame_mat, caps=(None, None), smooth=True)
+    inner = [(u * 0.94, v * 0.94) for (u, v) in o]
+    flat_shape(p, inner, 0.004, "Mesh")
+    if lod == 0:
+        for i in range(n):
+            v = -l * 0.47 + l * 0.94 * (i + 0.5) / n
+            seg_box(p, (0, v, 0.0065), (w * 0.9, l * 0.94 / n * 0.92, 0.004), slat_mat, rot=(math.radians(angle), 0, 0))
+    return p

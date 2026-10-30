@@ -382,6 +382,7 @@ def build_car(spec, out_dir, shared_tex, log=print):
         "lights": ctx0.meta.get("lights", {}),
         "exhaustOutlets": ctx0.meta.get("exhaust_out", {}),
         "maxLoweringCm": spec.get("max_lowering_cm", 4),
+        "defaultTuning": spec.get("default_tuning", {}),
         "rims": [d.get("label", d["style"]) for d in spec["rims"]],
         "spoilers": spec.get("spoiler_labels", ["Lippe", "GT-Flügel", "Cyber-Flügel"]),
         "liveries": spec.get("livery_labels", ["Rennstreifen", "Seitenblitz", "Startnummer"]),

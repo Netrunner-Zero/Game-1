@@ -16,7 +16,7 @@ const ROSTER = [
   { id: 'vektra_gt', name: 'Vektra GT', color: '#c8102e' },
   { id: 'brawler_77', name: 'Brawler 77', color: '#f5a300' },
   { id: 'ion_spectre', name: 'Ion Spectre', color: '#e9edf3' },
-  { id: 'rhino_x', name: 'Rhino X', color: '#5b6b4e' },
+  { id: 'rhino_x', name: 'Rhino X', color: '#3d4a3e' },
   { id: 'pulse', name: 'Pulse', color: '#1f6fff' },
   { id: 'aurelion_s', name: 'Aurelion S', color: '#1b2a3a' },
 ];

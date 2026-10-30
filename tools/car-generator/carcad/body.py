@@ -567,6 +567,8 @@ class Body:
                 nrm = -nrm
             if kind == "pillar":
                 return "bpillar" if not on_roof else "roof"
+            if kind == "cpillar":
+                return "pillar" if not on_roof else "roof"      # lackierte C-Säule (Kompakte, Kombis)
             # A-/C-Säulen: feste Indexbänder an der Ecke Seite/Dach (gerade Kanten)
             band_side = max(1, int(round(ns * self.spec.get("pillar_frac", 0.22))))
             jr = j if j < m // 2 else (m - 2 - j)       # gespiegelter Index (rechte Seite)

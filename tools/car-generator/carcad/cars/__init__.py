@@ -10,5 +10,6 @@ def S(z, w, yb, yt, cr):
 
 def C(z, wb, wt, y1, kind="roof"):
     """Kabinenstation. y1 > 0: absolute Höhe; y1 <= 0: so viel über der Haube.
-    kind: ws (Frontscheibe), roof, glassroof, pillar (B-Säule), rear (Heckscheibe)."""
+    kind: ws (Frontscheibe), roof, glassroof, pillar (B-Säule, schwarz), cpillar (lackierte Säule),
+    rear (Heckscheibe). Die Art gilt für den Abschnitt, der an dieser Station endet."""
     return {"z": z, "wb": wb, "wt": wt, "y1": y1, "kind": kind}

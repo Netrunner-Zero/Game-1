@@ -40,6 +40,7 @@ export function defaultTuning(meta) {
     engine: 0,
     cage: 0,
     ambient: null,                // Farbe der Ambiente-Beleuchtung (null = Werkseinstellung)
+    ...(meta.defaultTuning || {}), // je Auto, z. B. Dachspoiler beim Pulse ab Werk
   };
 }
 

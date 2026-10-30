@@ -174,7 +174,7 @@ def liveries(ctx):
                 samples = [(z, b.j_at_x_top(z, xm)) for z in np.linspace(a_, b_, n_)]
                 b.strip(l1, samples, abs(x1 - x0), "Livery", offset=0.0025)
         # Dach
-        roofs = [c for c in cab if c["kind"] in ("roof", "glassroof", "pillar")]
+        roofs = [c for c in cab if c["kind"] in ("roof", "glassroof", "pillar", "cpillar")]
         if roofs and not any(c["kind"] == "glassroof" for c in cab):
             zr0 = max(c["z"] for c in roofs) + 0.02
             zr1 = min(c["z"] for c in roofs) - 0.02

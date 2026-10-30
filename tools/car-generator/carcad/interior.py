@@ -544,6 +544,12 @@ class Cockpit:
         if st == "sport":
             p.tube([np.array([0, ys, zs]), np.array([0, ys + 0.09, zs - 0.01])], 0.009, "InteriorPlastic", segs=8)
             p.sphere((0, ys + 0.105, zs - 0.012), 0.026, C.get("knob", "Aluminum"), segs=16, rings=10, scale=(1, 0.85, 1.15))
+            if C.get("knob_top"):          # Deckel mit Schaltschema
+                p.lathe([(0.0, 0.0), (0.0, 0.013), (-0.0035, 0.0145)], 18, C["knob_top"],
+                        center=(0, ys + 0.1265, zs - 0.012), axis="y", inside=(-0.004, 0.0))
+            if C.get("knob_ring"):         # Zierring unter dem Knauf
+                p.lathe([(ys + 0.083, 0.0115), (ys + 0.083, 0.0135), (ys + 0.089, 0.0135), (ys + 0.089, 0.0115)], 18,
+                        C["knob_ring"], center=(0, 0, zs - 0.010), axis="y", inside=(ys + 0.086, 0.012))
             p.lathe([(ys + 0.001, 0.0), (ys + 0.001, 0.04), (ys + 0.012, 0.03), (ys + 0.02, 0.012)], 16, "SteeringLeather",
                     center=(0, 0, zs), axis="y", inside=(ys + 0.005, 0.0))
         elif st == "t_handle":
