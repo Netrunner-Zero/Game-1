@@ -649,3 +649,84 @@ def e_drive(part, c, lod=0, glow="Accent", width=1.1):
             pts = [c + np.array([sx * 0.38, 0.05, -0.2]), c + np.array([sx * 0.42, 0.18, 0.1]),
                    c + np.array([sx * 0.30, 0.24, 0.35])]
             part.tube(pts, 0.012, glow, segs=8)
+
+
+# ----------------------------------------------------------------------
+# Geländewagen-Teile
+# ----------------------------------------------------------------------
+
+def spare_wheel(ctx, center, R=0.40, W=0.26, rim_design=None, part="Spare"):
+    """Reserverad an der Hecktür (Achse entlang z), mit Halter."""
+    from . import wheels as WH
+    lod = min(ctx.lod, 1)
+    rd = rim_design or {"style": "beadlock", "n": 6}
+    Rr = R * 0.62
+    t = WH.tire(R, W, Rr, 1, lod, "at")
+    r = WH.rim(R, W, Rr, 1, rd, lod)
+    M = rot_matrix(0, -math.pi / 2, 0)            # Radachse x -> -z (Außenseite zeigt nach hinten)
+    p = ctx.part(part)
+    c = np.asarray(center, dtype=float)
+    p.merge(t.transformed(M, c))
+    p.merge(r.transformed(M, c))
+    p.rbox(c + np.array([0, 0, W / 2 + 0.03]), (0.30, 0.10, 0.06), 0.015, "Trim", segs=1)
+
+
+def roof_rails(ctx, z0, z1, x, h=0.06, cross=(), mat="Trim", part="Roof"):
+    cg = CabinGeo(ctx.b)
+    p = ctx.part(part)
+    for sx in (1, -1):
+        path = [np.array([sx * x, cg.glass_y(z, x) + h, z]) for z in np.linspace(z0, z1, 10)]
+        p.tube(path, 0.016, mat, segs=10, caps=True)
+        for z in (z0, (z0 + z1) / 2, z1):            # Füße
+            y = cg.glass_y(z, x)
+            p.rbox((sx * x, y + h / 2, z), (0.04, h, 0.07), 0.012, mat, segs=1)
+    for z in cross:
+        y = max(cg.glass_y(z, x), cg.roof(z)) + h + 0.012
+        p.tube([np.array([x, y, z]), np.array([-x, y, z])], 0.014, "Aluminum", segs=10)
+
+
+def snorkel(part, fender_pt, top_pt, r=0.045, mat="Trim"):
+    """Ansaugschnorchel vom Kotflügel an der A-Säule hinauf, Kopf zeigt nach vorne."""
+    a = np.asarray(fender_pt, dtype=float)
+    b = np.asarray(top_pt, dtype=float)
+    mid = a + (b - a) * 0.5 + np.array([np.sign(a[0]) * 0.03, 0, 0.04])
+    part.tube([a, a + np.array([0, 0.06, -0.04]), mid, b], r, mat, segs=14)
+    part.rbox(a + np.array([0, 0.012, 0.0]), (0.12, 0.024, 0.14), 0.01, mat, segs=1)
+    head = b + np.array([0, 0.03, 0.05])
+    part.rbox(head, (r * 2.6, r * 2.4, 0.16), r * 0.8, mat, segs=3)
+    part.rbox(head + np.array([0, 0, 0.08]), (r * 2.2, r * 1.9, 0.01), 0.01, "Mesh", segs=1)
+
+
+def bull_bar(ctx, y, out=0.12, w=0.70, mat="Trim", part="BullBar"):
+    """Frontbügel mit Seilwinde."""
+    p = ctx.part(part)
+    hit = ctx.hit_front(0.0, y)
+    if hit is None:
+        return
+    z = hit[0][2] + out
+    for sx in (1, -1):
+        p.tube([np.array([sx * w * 0.45, y - 0.18, z - 0.06]), np.array([sx * w * 0.45, y + 0.20, z]),
+                np.array([sx * w * 0.25, y + 0.32, z + 0.01])], 0.025, mat, segs=12)
+    p.tube([np.array([-w * 0.25, y + 0.32, z + 0.01]), np.array([w * 0.25, y + 0.32, z + 0.01])], 0.025, mat, segs=12)
+    p.tube([np.array([-w * 0.5, y + 0.02, z]), np.array([w * 0.5, y + 0.02, z])], 0.022, mat, segs=12)
+    # Seilwinde
+    p.lathe([(-0.16, 0.0), (-0.16, 0.06), (0.16, 0.06), (0.16, 0.0)], 18, "EngineBlack",
+            center=(0.0, y - 0.10, z - 0.05), axis="x", inside=(0.0, 0.03))
+    p.lathe([(-0.12, 0.062), (0.12, 0.062)], 18, "Wiper", center=(0.0, y - 0.10, z - 0.05), axis="x",
+            inside=(0.0, 0.04))
+    p.rbox((0.0, y - 0.10, z + 0.02), (0.10, 0.05, 0.04), 0.01, "EngineRed", segs=1)
+
+
+def light_bar(ctx, z, w=1.2, h=0.07, part="Roof", y_off=0.06):
+    """LED-Lichtleiste auf der Dachvorderkante."""
+    cg = CabinGeo(ctx.b)
+    y = cg.roof(z) + y_off
+    p = ctx.part(part)
+    p.rbox((0.0, y, z), (w, h, 0.08), 0.02, "Trim", segs=2)
+    p.rbox((0.0, y, z + 0.041), (w - 0.04, h - 0.025, 0.004), 0.01, "LampGlass", segs=1)
+    n = 10
+    for k in range(n):
+        x = -w / 2 + 0.06 + (w - 0.12) * k / (n - 1)
+        p.lathe([(0.0, 0.0), (0.0, 0.016)], 10, "Headlight", center=(x, y, z + 0.035), axis="z", inside=(-0.01, 0.0))
+    for sx in (1, -1):
+        p.box((sx * w * 0.42, y - h / 2 - 0.03, z - 0.01), (0.03, 0.06, 0.03), "Trim")

@@ -316,7 +316,7 @@
     "L1": 23468,
     "L2": 14660
    },
-   "fileBytes": 6248840
+   "fileBytes": 6248576
   },
   {
    "id": "brawler_77",
@@ -625,11 +625,11 @@
     "Startnummer"
    ],
    "triangles": {
-    "L0": 115071,
-    "L1": 20244,
+    "L0": 115031,
+    "L1": 20224,
     "L2": 10458
    },
-   "fileBytes": 5828856
+   "fileBytes": 5827884
   },
   {
    "id": "ion_spectre",
@@ -863,7 +863,287 @@
     "L1": 20864,
     "L2": 12100
    },
-   "fileBytes": 5699876
+   "fileBytes": 5700908
+  },
+  {
+   "id": "rhino_x",
+   "name": "Rhino X",
+   "file": "rhino_x.glb",
+   "description": "Schwerer Offroad-SUV mit Allrad, Starrachsen und viel Bodenfreiheit",
+   "class": "Geländewagen",
+   "brand": "RHINO",
+   "defaultPaint": "#3d4a3e",
+   "defaultAccent": "#ff8a00",
+   "defaultRim": "#2a2c30",
+   "defaultCaliper": "#ff8a00",
+   "dimensions": {
+    "length": 4.76,
+    "width": 1.999,
+    "height": 1.901
+   },
+   "wheelbase": 2.9,
+   "wheels": [
+    {
+     "node": "Wheel_FL",
+     "caliper": "Caliper_FL",
+     "position": [
+      0.885,
+      0.42,
+      1.45
+     ],
+     "radius": 0.42,
+     "width": 0.3,
+     "steer": true,
+     "drive": true
+    },
+    {
+     "node": "Wheel_FR",
+     "caliper": "Caliper_FR",
+     "position": [
+      -0.885,
+      0.42,
+      1.45
+     ],
+     "radius": 0.42,
+     "width": 0.3,
+     "steer": true,
+     "drive": true
+    },
+    {
+     "node": "Wheel_RL",
+     "caliper": "Caliper_RL",
+     "position": [
+      0.885,
+      0.42,
+      -1.45
+     ],
+     "radius": 0.42,
+     "width": 0.3,
+     "steer": false,
+     "drive": true
+    },
+    {
+     "node": "Wheel_RR",
+     "caliper": "Caliper_RR",
+     "position": [
+      -0.885,
+      0.42,
+      -1.45
+     ],
+     "radius": 0.42,
+     "width": 0.3,
+     "steer": false,
+     "drive": true
+    }
+   ],
+   "stats": {
+    "massKg": 2400,
+    "powerKw": 330,
+    "drive": "AWD",
+    "topSpeedKmh": 220,
+    "grip": 0.95,
+    "suspension": "lang, weich"
+   },
+   "physics": {
+    "massKg": 2400,
+    "cogHeight": 0.8,
+    "weightFront": 0.52,
+    "dragCd": 0.5,
+    "frontalArea": 3.2,
+    "powerKw": 330,
+    "torqueNm": 700,
+    "idleRpm": 700,
+    "redlineRpm": 6200,
+    "gears": [
+     4.7,
+     3.14,
+     2.11,
+     1.67,
+     1.29,
+     1.0,
+     0.84,
+     0.67
+    ],
+    "finalDrive": 3.9,
+    "lowRange": 2.7,
+    "suspension": {
+     "springFront": 42000,
+     "springRear": 46000,
+     "damping": 0.35,
+     "travel": 0.26,
+     "antiRollFront": 0.4,
+     "antiRollRear": 0.35
+    },
+    "tire": {
+     "grip": 0.95,
+     "slipPeak": 0.12,
+     "offroadGrip": 1.25
+    },
+    "brakeForce": 0.95,
+    "brakeBias": 0.62,
+    "steerLockDeg": 36,
+    "groundClearance": 0.27
+   },
+   "tuning": {
+    "engine": [
+     {
+      "name": "Serie V8",
+      "powerKw": 330,
+      "torqueNm": 700
+     },
+     {
+      "name": "Schnorchel + Luftfilter",
+      "powerKw": 345,
+      "torqueNm": 730
+     },
+     {
+      "name": "Biturbo + Ladeluftkühler",
+      "powerKw": 420,
+      "torqueNm": 850
+     },
+     {
+      "name": "Expedition (Bügel, Winde, LED)",
+      "powerKw": 440,
+      "torqueNm": 880
+     }
+    ],
+    "exhaust": [
+     {
+      "name": "Serie",
+      "loudness": 1
+     },
+     {
+      "name": "Doppelrohr Sport",
+      "loudness": 4
+     },
+     {
+      "name": "Hochauspuff (Wattiefe)",
+      "loudness": 6
+     }
+    ],
+    "cage": [
+     {
+      "name": "Kein Käfig"
+     },
+     {
+      "name": "Halbkäfig",
+      "massKg": 22,
+      "stiffness": 1.05
+     },
+     {
+      "name": "Vollkäfig",
+      "massKg": 40,
+      "stiffness": 1.12
+     }
+    ]
+   },
+   "plate": "RX 404",
+   "gauges": {
+    "speedMaxKmh": 260,
+    "rpmMaxThousand": 7,
+    "sweepDeg": 270,
+    "cluster": "digital",
+    "center": "dash",
+    "rearScreens": false
+   },
+   "cockpit": {
+    "eye": [
+     0.4,
+     1.644,
+     -0.613
+    ],
+    "steeringWheel": [
+     0.4,
+     1.154,
+     0.067
+    ],
+    "steeringRatioDeg": 560
+   },
+   "lights": {
+    "head": [
+     [
+      0.68,
+      0.85,
+      2.38
+     ]
+    ],
+    "indicator": [
+     [
+      0.68,
+      0.7,
+      2.38
+     ]
+    ],
+    "tail": [
+     [
+      0.86,
+      0.95,
+      -2.38
+     ]
+    ]
+   },
+   "exhaustOutlets": {
+    "1": [
+     [
+      -0.62,
+      0.395,
+      -2.43,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "2": [
+     [
+      0.62,
+      0.392,
+      -2.44,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.62,
+      0.392,
+      -2.44,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "3": [
+     [
+      -0.969,
+      1.899,
+      -2.377,
+      0.0,
+      0.5,
+      -0.866
+     ]
+    ]
+   },
+   "maxLoweringCm": 6,
+   "rims": [
+    "Beadlock",
+    "Gelände 5",
+    "Y-Speiche"
+   ],
+   "spoilers": [
+    "Dachkante",
+    "Dachflügel",
+    "Cyber-Dachflügel"
+   ],
+   "liveries": [
+    "Rennstreifen",
+    "Seitenblitz",
+    "Startnummer"
+   ],
+   "triangles": {
+    "L0": 129080,
+    "L1": 24155,
+    "L2": 12459
+   },
+   "fileBytes": 6685328
   }
  ]
 }

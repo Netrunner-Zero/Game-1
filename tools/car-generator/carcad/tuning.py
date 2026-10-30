@@ -253,13 +253,79 @@ def exhausts(ctx):
                     p.tube([P + np.array([-sx * 0.02, 0, 0.0]), P + np.array([-sx * 0.02, -0.03, 0.35])], r * 0.9, mat,
                            segs=14)
                 continue
+            if item[0] == "stack":
+                # Hochgelegter Auspuff (Wattiefe): Rohr an der D-Säule hinauf, Mündung schräg nach hinten
+                _, z, y0, y1, r, mat = item
+                hit = ctx.hit_side(z, y0, -1)
+                if hit is None:
+                    continue
+                cg = CabinGeo(ctx.b)
+                x_side = abs(float(hit[0][0]))
+                y_belt = ctx.b.params_at(z)["yt"]
+
+                def body_x(yy):
+                    if yy < y_belt - 0.03:
+                        h_ = ctx.hit_side(z, yy, -1)
+                        return abs(float(h_[0][0])) if h_ is not None else x_side
+                    return cg.glass_x(z, yy)
+
+                x_lo = x_side + r + 0.035                   # unten neben dem Blech
+                x_hi = body_x(y1 - 0.15) + r + 0.022        # oben an der Säule
+                ya, yb2 = y_belt - 0.02, y_belt + 0.22      # Übergang über die Schulter
+                path = [np.array([-(x_side - 0.05), y0, z]), np.array([-x_lo, y0 + 0.05, z]),
+                        np.array([-x_lo, y0 + 0.12, z]), np.array([-x_lo, ya, z])]
+                for t in np.linspace(0.0, 1.0, 6)[1:]:
+                    s_ = t * t * (3 - 2 * t)
+                    path.append(np.array([-(x_lo + (x_hi - x_lo) * s_), ya + (yb2 - ya) * t, z]))
+                top = np.array([-x_hi, y1, z])
+                path.append(top)
+                # Bogen (60°) nach hinten, Mündung 30° über der Waagerechten
+                rb = 0.08
+                arc_pts = [top + rb * np.array([0.0, math.sin(f), -(1 - math.cos(f))])
+                           for f in np.linspace(0.0, math.radians(60), 6)[1:]]
+                p.tube(path + arc_pts, r, mat, segs=14 if ctx.lod == 0 else 8)
+                tip_dir = np.array([0.0, 0.5, -0.866])
+                P = arc_pts[-1] + tip_dir * 0.10
+                M = rot_matrix(math.radians(30), 0, 0)      # lokale -z (Mündung) -> tip_dir
+                exhaust_tip(p, P, r * 1.15, 0.10, "round", mat, lod=ctx.lod, M=M)
+
+                def pipe_x(yy):
+                    if yy <= ya:
+                        return x_lo
+                    if yy >= yb2:
+                        return x_hi
+                    t = (yy - ya) / (yb2 - ya)
+                    return x_lo + (x_hi - x_lo) * t * t * (3 - 2 * t)
+
+                for yy in (y0 + 0.30, y_belt + 0.32, y1 - 0.10):      # Halter
+                    xb, xp = body_x(yy), pipe_x(yy)
+                    p.rbox((-(xb + xp) / 2, yy, z), (abs(xp - xb) + 0.01, 0.025, 0.03), 0.006, "Trim", segs=1)
+                    p.lathe([(-0.014, r + 0.004), (0.014, r + 0.004)], 14, "Trim", center=(-xp, yy, z), axis="y",
+                            inside=(0.0, r * 0.5))
+                outs = ctx.meta.setdefault("exhaust_out", {}).setdefault(vi + 1, [])
+                outs.append([round(float(v), 3) for v in P] + [round(float(v), 3) for v in tip_dir])
+                continue
             x, r, style, mat = item[:4]
             y = ex.get("y", 0.3) if len(item) < 5 else item[4]
+            if len(item) >= 6:
+                # feste Position (z. B. unter einem Stoßfänger, wo kein Blech getroffen wird)
+                P = np.array([x, y, item[5]], dtype=float)
+                exhaust_tip(p, P, r, 0.08, style, mat, lod=ctx.lod)
+                if ex.get("tail_pipe"):
+                    p.tube([P + np.array([0, 0, 0.07]), P + np.array([0, 0.01, ex["tail_pipe"]])], r * 0.82, mat,
+                           segs=14 if ctx.lod == 0 else 8)
+                outs = ctx.meta.setdefault("exhaust_out", {}).setdefault(vi + 1, [])
+                outs.append([round(float(v), 3) for v in P] + [0.0, 0.0, -1.0])
+                continue
             hit = ctx.hit_rear(x, y)
             if hit is None:
                 continue
             P = hit[0] + np.array([0, 0, -ex.get("protrude", 0.018)])
             exhaust_tip(p, P, r, 0.08, style, mat, lod=ctx.lod)
+            if ex.get("tail_pipe"):
+                # sichtbares Rohrstück vom Unterboden bis zur Blende
+                p.tube([P + np.array([0, 0, 0.07]), P + np.array([0, 0.01, ex["tail_pipe"]])], r * 0.82, mat,
+                       segs=14 if ctx.lod == 0 else 8)
             outs = ctx.meta.setdefault("exhaust_out", {}).setdefault(vi + 1, [])
             outs.append([round(float(v), 3) for v in P] + [0.0, 0.0, -1.0])
             # dunkle Aussparung im Stoßfänger

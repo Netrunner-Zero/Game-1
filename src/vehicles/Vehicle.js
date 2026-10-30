@@ -74,6 +74,7 @@ export class Vehicle {
     this.shadow = null;
     const mats = new Map();
     const lodParents = new Map();
+    const unsprung = new Set();
     this.root.traverse((o) => {
       const u = o.userData || {};
       if (u.wheel) this.wheels.push({ obj: o, pos: u.wheel, steer: !!u.steer, radius: u.radius || 0.33, base: o.quaternion.clone() });
@@ -88,6 +89,7 @@ export class Vehicle {
       if (u.anim === 'pedal') this.anim.pedals.push({ obj: o, pedal: u.pedal, base: o.quaternion.clone() });
       if (u.helper) this.helpers[u.helper] = o;
       if (u.shadow) this.shadow = o;
+      if (u.unsprung) unsprung.add(o);          // Starrachsen u. ä.: bleiben auf Radhöhe
       if (o.isMesh) {
         const list = Array.isArray(o.material) ? o.material : [o.material];
         for (const m of list) mats.set(m.uuid, m);
@@ -103,7 +105,7 @@ export class Vehicle {
     // Karosserieteile (für Tieferlegung): alles außer Rädern, Bremssätteln und Kontaktschatten.
     // gltf.scene enthält genau einen Wurzelknoten (das Auto); dessen Kinder sind die Bauteile.
     this.carRoot = this.root.children.length === 1 ? this.root.children[0] : this.root;
-    const isWheel = new Set([...this.wheels.map((w) => w.obj), ...this.calipers.map((c) => c.obj)]);
+    const isWheel = new Set([...this.wheels.map((w) => w.obj), ...this.calipers.map((c) => c.obj), ...unsprung]);
     this.bodyNodes = this.carRoot.children.filter((c) => !isWheel.has(c) && c !== this.shadow);
     for (const n of this.bodyNodes) n.userData.baseY = n.position.y;
     this._prepareMaterials();

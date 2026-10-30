@@ -148,6 +148,9 @@ class Cockpit:
         self.doors()
         self.belts()
         self.mirror_visors()
+        if self.sp.get("cockpit_extra"):
+            # fahrzeugspezifische Innenraumteile (z. B. Haltegriff am Armaturenbrett)
+            self.sp["cockpit_extra"](self)
         self.anchors["eye"] = self.eye
         return self
 
@@ -270,14 +273,26 @@ class Cockpit:
             # Höhe unter der Scheibe
             y_glass_face = cg.glass_y(z_face, x) - D.get("clear", 0.06)
             y_glass_front = cg.glass_y(z_front - 0.05, x) - 0.02
-            hump = math.exp(-((x - 0.33) / 0.16) ** 2) * D.get("binnacle", 0.035)
+            hump = math.exp(-((x - I.get("driver_x", 0.33)) / 0.16) ** 2) * D.get("binnacle", 0.035)
             stack = math.exp(-(x / 0.18) ** 2) * D.get("stack", 0.06)
             ytop = min(y_glass_face + hump, b.params_at(z_face)["yt"] + D.get("height", 0.20))
             ytop = min(ytop, y_glass_face + hump)
             yfront = min(y_glass_front, ytop)
             zf2 = z_face - stack
             knee = self.floor + D.get("knee", 0.42)
-            prof = [(z_front, yfront - 0.005), ((z_front + zf2) / 2, (yfront + ytop) / 2 + 0.01), (zf2 + 0.03, ytop),
+            # Steile Frontscheibe: Vorderkante des Armaturenbretts hinter das Glas legen,
+            # sonst ragt sie über dem Windlauf aus dem Auto heraus.
+            zfx = z_front
+            if yfront > b.top_y(min(z_front, b.zf - 0.01), x) - 0.005:
+                lo, hi = zf2 + 0.06, z_front
+                for _ in range(32):
+                    mid = (lo + hi) / 2
+                    if cg.glass_y(mid, x) >= yfront + 0.012:
+                        lo = mid
+                    else:
+                        hi = mid
+                zfx = min(z_front, lo - 0.008)
+            prof = [(zfx, yfront - 0.005), ((zfx + zf2) / 2, (yfront + ytop) / 2 + 0.01), (zf2 + 0.03, ytop),
                     (zf2, ytop - 0.03), (zf2 - 0.01, ytop - 0.16), (zf2 + 0.05, knee + 0.05), (zf2 + 0.12, knee),
                     (self.fw - 0.02, knee - 0.02)]
             chain = round_open(prof, [0, 0.05, 0.03, 0.03, 0.04, 0.05, 0.02, 0], 3)
@@ -309,7 +324,7 @@ class Cockpit:
         for a_, b_ in zip(pts[:-1], pts[1:]):
             p.box((a_ + b_) / 2, (np.linalg.norm(b_ - a_) + 0.002, 0.005, 0.006), "InteriorAmbient")
         # Instrumente
-        gx = 0.33
+        gx = I.get("driver_x", 0.33)              # Lenkrad/Instrumente vor dem Fahrersitz
         prof, (_, ytop, zf2) = face_at(gx)
         cl = I.get("cluster", {"type": "digital", "w": 0.30, "h": 0.12})
         self.cluster_type = cl["type"]

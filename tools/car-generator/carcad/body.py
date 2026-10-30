@@ -400,22 +400,61 @@ class Body:
                 s1 = norm(np.cross(n1, t)) * width / 2
                 part.quad(p0 - s0, p0 + s0, p1 + s1, p1 - s1, mat, normals=[n0, n0, n1, n1], outward=n0 + n1)
 
+    def arch_clear_r(self, axle):
+        """Radius um die Radmitte, außerhalb dessen Fugen um den Radlauf herum laufen."""
+        wd = self.wheels[axle]
+        rc = wd["R"] + wd.get("gap", self.spec.get("arch_gap", 0.045))
+        fl = self.spec.get("flare")
+        return wd["z"], wd["R"], rc + ((fl[1] + 0.02) if fl else 0.03) + 0.014
+
     def gap_lines(self, part, gaps, mat="Gap", width=0.0045):
-        """Fugen aus der Fahrzeugbeschreibung."""
+        """Fugen aus der Fahrzeugbeschreibung.
+
+        Türen mit "arch": "rear" (bzw. "front") bekommen an der hinteren (vorderen) Kante
+        einen Ausschnitt, der dem Radlauf folgt (wie bei hinteren Türen von SUVs)."""
         for door in gaps.get("doors", []):
+            zf_, zr_ = door["z"]
+            y_lo = door.get("y0", None)
+            arch = door.get("arch")
+            arc = None
+            if arch:
+                zc, yc, ra = self.arch_clear_r(arch)
+                ze = zr_ if arch == "rear" else zf_
+                dz = ze - zc
+                if abs(dz) < ra:
+                    ylo = y_lo if y_lo else self.params_at(ze)["yb"] + 0.09
+                    a_top = math.acos(max(-1.0, min(1.0, dz / ra)))
+                    a_bot = math.asin(max(-0.99, min(0.99, (ylo - yc) / ra)))
+                    if arch == "front":
+                        a_bot = math.pi - a_bot
+                    arc = (zc, yc, ra, ze, a_top, a_bot, yc + ra * math.sin(a_top))
             for side in (1, -1):
                 for zg in door["z"]:
-                    y_lo = door.get("y0", None)
-                    lo = self.j_at_height(zg, y_lo if y_lo else self.params_at(zg)["yb"] + 0.09, side)
+                    y0 = y_lo if y_lo else self.params_at(zg)["yb"] + 0.09
+                    if arc and abs(zg - arc[3]) < 1e-9:
+                        y0 = arc[6]
+                    lo = self.j_at_height(zg, y0, side)
                     hi = self.j_cut_r - 0.6 if side > 0 else self.j_cut_l + 0.6
                     n = 12
                     samples = [(zg, lo + (hi - lo) * i / n) for i in range(n + 1)]
                     self.strip(part, samples, width, mat)
-                # Unterkante der Tür (Schwellerlinie)
+                # Unterkante der Tür (Schwellerlinie), ggf. mit Bogen um den Radlauf
                 if door.get("sill", True):
-                    zs = list(np.linspace(door["z"][1], door["z"][0], 14))
-                    y_lo = door.get("y0", None)
-                    samples = [(z, self.j_at_height(z, y_lo if y_lo else self.params_at(z)["yb"] + 0.09, side)) for z in zs]
+                    za, zb_ = zr_, zf_
+                    if arc:
+                        zc, yc, ra, ze, a_top, a_bot, _ = arc
+                        pts = []
+                        for t in np.linspace(0.0, 1.0, 18):
+                            a = a_top + (a_bot - a_top) * t
+                            pts.append((zc + ra * math.cos(a), yc + ra * math.sin(a)))
+                        self.strip(part, [(z, self.j_at_height(z, y, side)) for (z, y) in pts], width, mat)
+                        if arch == "rear":
+                            za = pts[-1][0]
+                        else:
+                            zb_ = pts[-1][0]
+                    zs = list(np.linspace(za, zb_, 14))
+                    samples = [(z, self.j_at_height(z, y_lo if y_lo else self.params_at(z)["yb"] + 0.09, side))
+                               for z in zs]
                     self.strip(part, samples, width, mat)
         for lid in gaps.get("lids", []):
             # Hauben/Deckel: zwei Längslinien + Querlinie
@@ -514,7 +553,9 @@ class Body:
         classes = {}
 
         def face_class(k, j):
-            kind = cst[k + 1]["kind"]
+            # Die Unterstationen eines Abschnitts tragen dessen Art (siehe cabin_stations);
+            # die Fläche zwischen k und k+1 gehört zum Abschnitt, der bei k beginnt.
+            kind = cst[k]["kind"]
             # j: 0..ns-1 rechte Seite, ns..ns+2nr-1 Dach, danach linke Seite; letzte Kante = Boden
             if j == m - 1:
                 return None  # Boden offen (Fahrgastzelle)
@@ -586,6 +627,32 @@ class Body:
                         s0 = norm(np.cross(n0, t)) * w_seal / 2
                         part.quad(p0 - s0 + n0 * 0.002, p0 + s0 + n0 * 0.002, p1 + s0 + n1 * 0.002,
                                   p1 - s0 + n1 * 0.002, seal, normals=[n0, n0, n1, n1], outward=n0 + n1)
+        # Senkrechter Heckabschluss (SUV, Kombi, Kompakter): Glashaus hinten schließen –
+        # Rahmen in Dachfarbe, Heckscheibe darin, innen verkleidet
+        last = cst[-1]
+        pl = self.params_at(last["z"])
+        if last["y1"] > pl["yt"] + pl["cr"] + 0.12:
+            sec = [np.array(q) for q in S[K - 1]]
+            ys = [q[1] for q in sec]
+            y_bot, y_top = min(ys), max(ys)
+            cen = np.mean(np.array(sec), axis=0)
+            nrm = np.array([0.0, 0.0, -1.0])
+            fm = self.spec.get("rear_cap_mat", roof)
+            for j in range(m):
+                part.tri(cen, sec[j], sec[(j + 1) % m], fm, outward=nrm, normals=[nrm, nrm, nrm])
+                a, b_ = sec[j] + np.array([0, 0, 0.012]), sec[(j + 1) % m] + np.array([0, 0, 0.012])
+                part.tri(cen + np.array([0, 0, 0.012]), a, b_, "Interior", outward=-nrm, normals=[-nrm, -nrm, -nrm])
+            ymid = (y_bot + y_top) / 2 + 0.03
+            inner = []
+            for q in sec:
+                y2 = ymid + (q[1] - ymid) * 0.8
+                y2 = max(y2, y_bot + 0.08)
+                inner.append(np.array([q[0] * 0.84, y2, q[2] - 0.004]))
+            ci = np.mean(np.array(inner), axis=0)
+            for j in range(m):
+                part.tri(ci, inner[j], inner[(j + 1) % m], glass, outward=nrm, normals=[nrm, nrm, nrm])
+            self.rear_cap = {"z": float(cen[2]), "y0": float(y_bot + 0.08), "y1": float(ymid + (y_top - ymid) * 0.8),
+                             "w": float(max(abs(q[0]) for q in inner))}
         # Gürtellinien-Leiste über der Schnittkante der Karosserie
         if belt:
             zo0, zo1 = self.cabin_open_range()

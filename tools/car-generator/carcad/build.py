@@ -125,7 +125,9 @@ def default_plates(ctx):
                 tilt = pp.get("tilt_front" if front else "tilt_rear")
                 if tilt is not None:
                     n = np.array([0.0, math.sin(math.radians(tilt)), axis[2] * math.cos(math.radians(tilt))])
-                place_flat(ctx, plate_holder_local(ctx.lod), hit[0], n, (0.54, 0.13), p, lift=0.004)
+                # *_out: Kennzeichen sitzt vor der Haut (z. B. auf einem dicken Stoßfänger)
+                lift = 0.004 + pp.get("front_out" if front else "rear_out", 0.0)
+                place_flat(ctx, plate_holder_local(ctx.lod), hit[0], n, (0.54, 0.13), p, lift=lift)
         out.append(p)
     return out
 
@@ -191,6 +193,11 @@ def build_car(spec, out_dir, shared_tex, log=print):
     exhausts = {lod: TU.exhausts(lods[lod][2]) for lod in (0, 1)}
     engine = {lod: sp0["engine"](lods[lod][2]) for lod in (0, 1)} if "engine" in sp0 else {0: {}, 1: {}}
     plates = {lod: (sp0["plates"] if "plates" in sp0 else default_plates)(lods[lod][2]) for lod in LODS}
+    # ungefederte Teile (Starrachsen): bleiben beim Tieferlegen auf Radhöhe
+    unsprung = {lod: sp0["unsprung"](lods[lod][2]) for lod in (0, 1)} if "unsprung" in sp0 else None
+    if unsprung:
+        for prt in unsprung.values():
+            smooth_part(prt, 40.0, mats=set(prt.tris) - NO_SMOOTH)
     glow = TU.underglow(ctx0)
     for dct in (spoilers, exhausts):
         for lst in dct.values():
@@ -301,6 +308,9 @@ def build_car(spec, out_dir, shared_tex, log=print):
     for i, pn in enumerate(("Plate_Front", "Plate_Rear")):
         nodes.append(group(pn, [mesh_node("%s_L%d" % (pn, k), plates[k][i], extras={"lod": k}) for k in LODS],
                            extras={"plate": "front" if i == 0 else "rear"}))
+    if unsprung:
+        nodes.append(group("Axles", [mesh_node("Axles_L%d" % k, unsprung[k], extras={"lod": k}) for k in (0, 1)],
+                           extras={"unsprung": True}))
     nodes.append(mesh_node("Underglow", glow, extras={"tune": "neon"}))
     nodes.append(mesh_node("ContactShadow", shadow, extras={"shadow": True}))
     # Hilfspunkte
