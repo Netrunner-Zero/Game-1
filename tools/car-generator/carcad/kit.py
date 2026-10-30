@@ -541,3 +541,111 @@ def shotgun_scoops(part, c, spread=0.09, length=0.30, r=0.055, mat="Chrome", lod
                    inside=(0.0, r * 0.95))
         part.lathe([(length * 0.25, 0.0), (length * 0.25, r * 0.86)], segs, "Mesh", center=tuple(cc), axis="z",
                    inside=(length * 0.25 - 0.02, 0.0))
+
+
+# ----------------------------------------------------------------------
+# Zukunftsteile: Kameraspiegel, Haifischflosse, Canards, E-Antrieb
+# ----------------------------------------------------------------------
+
+def camera_mirror(ctx, z, y, reach=0.11, part="Mirrors", body_mat="BlackGloss"):
+    """Kamera statt Außenspiegel: schlanker Arm mit stromlinienförmiger Kamerakapsel."""
+    hit = ctx.hit_side(z, y, 1)
+    if hit is None:
+        return
+    base = hit[0]
+    p = Part("cam")
+    c = base + np.array([reach, 0.05, -0.03])
+    p.sphere(c, 0.032, body_mat, segs=16, rings=10, scale=(0.9, 0.75, 2.0))
+    p.lathe([(0.0, 0.0), (0.0, 0.011), (-0.004, 0.009), (-0.005, 0.0)], 14, "DisplayGlass",
+            center=(c[0], c[1], c[2] - 0.062), axis="z", inside=(-0.002, 0.004))
+    p.lathe([(-0.0045, 0.0), (-0.0045, 0.004)], 10, "Accent", center=(c[0], c[1], c[2] - 0.0625), axis="z",
+            inside=(-0.003, 0.0))
+    st = []
+    for t in np.linspace(0, 1, 5):
+        pt = base * (1 - t) + (c + np.array([-0.02, -0.01, 0.01])) * t
+        ww = 0.05 * (1.2 - 0.6 * t)
+        st.append([pt + np.array([0, v, u]) for (u, v) in round_rect(ww, 0.012, 0.005, 2)])
+    p.loft(st, lambda k, j: body_mat, caps=(None, body_mat), smooth=True)
+    dst = ctx.part(part)
+    dst.merge(p)
+    dst.merge(p.mirrored_x())
+
+
+def center_fin(ctx, z0, z1, h_max, thick=0.014, mat="Paint", edge="Accent", part="BodyAdd"):
+    """Haifischflosse auf der Mittellinie (von der Heckscheibe bis zum Heck)."""
+    cg = CabinGeo(ctx.b)
+    b = ctx.b
+    zs_cab = cg.zs
+    p = ctx.part(part)
+    secs = []
+    n = 16 if ctx.lod == 0 else 5
+    zs = np.linspace(z0, z1, n)
+    tops = []
+    for i, z in enumerate(zs):
+        t = i / (n - 1)
+        if zs_cab[0] <= z <= zs_cab[-1]:
+            y0 = cg.roof(z)
+        else:
+            y0 = b.top_y(z, 0.0)
+        h = h_max * min(1.0, t / 0.75) ** 0.7 * (1.0 if t < 0.85 else max(0.15, 1 - (t - 0.85) / 0.15 * 0.85))
+        prof = [(thick / 2, y0 - 0.01), (thick / 2, y0 + h * 0.9), (thick * 0.25, y0 + h), (-thick * 0.25, y0 + h),
+                (-thick / 2, y0 + h * 0.9), (-thick / 2, y0 - 0.01)]
+        secs.append([np.array([x, y, z]) for (x, y) in prof])
+        tops.append(np.array([0.0, y0 + h + 0.002, z]))
+    p.loft(secs, lambda k, j: mat, closed=True, smooth=True, caps=(mat, mat))
+    if edge and ctx.lod == 0:
+        p.tube(tops[2:-1], 0.0035, edge, segs=6)
+
+
+def canards(ctx, x, y, z_hint=None, size=0.14, mat="Carbon", part="Aero"):
+    """Kleine Leitflügel an den vorderen Stoßfänger-Ecken (beide Seiten)."""
+    hit = ctx.rc.cast((x + 1.5, y, ctx.b.zf - 0.35), (-1, 0, -0.25), 3.0)
+    if hit is None:
+        hit = ctx.hit_front(x, y)
+    if hit is None:
+        return
+    P = hit[0]
+    p = Part("canard")
+    for k, (dy, s_) in enumerate(((0.0, 1.0), (0.065, 0.8))):
+        o = np.array([P[0], P[1] + dy, P[2]])
+        pts = [o + np.array([-0.01, 0, 0.01]), o + np.array([size * 0.55 * s_, 0.035 * s_, -0.04]),
+               o + np.array([size * 0.6 * s_, 0.045 * s_, -0.11 * s_]), o + np.array([-0.01, 0.0, -0.13 * s_])]
+        top = [q + np.array([0, 0.006, 0]) for q in pts]
+        p.hexa(pts + top, mat)
+    dst = ctx.part(part)
+    dst.merge(p)
+    dst.merge(p.mirrored_x())
+
+
+def e_drive(part, c, lod=0, glow="Accent", width=1.1):
+    """Elektro-Antrieb an der Hinterachse: zwei Motoren, Inverter, HV-Leitungen, Kühlleitungen."""
+    c = np.asarray(c, dtype=float)
+    segs = 24 if lod == 0 else 10
+    for sx in (1, -1):
+        mc = c + np.array([sx * 0.22, 0.0, 0.0])
+        part.lathe([(-0.16, 0.0), (-0.16, 0.12), (-0.14, 0.135), (0.14, 0.135), (0.16, 0.12), (0.16, 0.0)], segs,
+                   "EngineMetal", center=tuple(mc), axis="x", inside=(0.0, 0.06))
+        if lod == 0:
+            for k in range(7):                       # Kühlrippen
+                xx = -0.12 + 0.24 * k / 6
+                part.lathe([(xx - 0.006, 0.135), (xx - 0.006, 0.15), (xx + 0.006, 0.15), (xx + 0.006, 0.135)], segs,
+                           "EngineBlack", center=tuple(mc), axis="x", inside=(xx, 0.14))
+            part.lathe([(sx * 0.165, 0.0), (sx * 0.165, 0.09), (sx * 0.175, 0.07), (sx * 0.175, 0.0)], segs, "Copper",
+                       center=tuple(mc), axis="x", inside=(sx * 0.17, 0.03))
+        # Antriebswelle zum Rad
+        part.tube([mc + np.array([sx * 0.16, 0, 0]), mc + np.array([sx * (width / 2 - 0.22), 0, 0])], 0.03, "EngineBlack",
+                  segs=10)
+    inv = c + np.array([0.0, 0.2, 0.05])
+    part.rbox(inv, (0.42, 0.10, 0.34), 0.03, "EngineBlack", segs=2)
+    part.rbox(inv + np.array([0, 0.052, 0]), (0.30, 0.008, 0.22), 0.01, "Carbon", segs=1)
+    if lod == 0:
+        part.tex_quad(inv + np.array([0, 0.057, 0.0]), (-1, 0, 0), (0, 0, 1), 0.16, 0.025, "Wordmark")
+        for sx in (1, -1):                           # Hochvolt-Leitungen (orange)
+            a = inv + np.array([sx * 0.12, 0.0, 0.17])
+            part.tube([a, a + np.array([0, -0.05, 0.12]), c + np.array([sx * 0.22, 0.10, 0.25])], 0.016, "HVOrange",
+                      segs=8)
+        # Kühlleitungen mit Leuchtstreifen
+        for sx in (1, -1):
+            pts = [c + np.array([sx * 0.38, 0.05, -0.2]), c + np.array([sx * 0.42, 0.18, 0.1]),
+                   c + np.array([sx * 0.30, 0.24, 0.35])]
+            part.tube(pts, 0.012, glow, segs=8)

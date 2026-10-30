@@ -353,7 +353,7 @@ class Cockpit:
         prof_c, (_, ytop_c, zf2_c) = face_at(0.0)
         if ce["type"] == "floating":
             w_, h_ = ce.get("w", 0.36), ce.get("h", 0.20)
-            ccy = ytop_c + h_ / 2 - 0.02
+            ccy = ytop_c + h_ / 2 - ce.get("sink", 0.07)       # ragt nur wenig über das Armaturenbrett
             ccz = zf2_c - 0.02
             p.rbox((0, ccy, ccz + 0.008), (w_ + 0.014, h_ + 0.014, 0.014), 0.012, "DisplayGlass", segs=2)
             p.tex_quad((0, ccy, ccz), (-1, 0, 0), (0, 1, 0), w_, h_, "Display_Center")

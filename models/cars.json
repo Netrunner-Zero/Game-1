@@ -630,6 +630,240 @@
     "L2": 10458
    },
    "fileBytes": 5828856
+  },
+  {
+   "id": "ion_spectre",
+   "name": "Ion Spectre",
+   "file": "ion_spectre.glb",
+   "description": "Elektro-Hypercar mit vier Motoren, Allrad, extreme Beschleunigung",
+   "class": "Elektro-Hypercar",
+   "brand": "ION",
+   "defaultPaint": "#e9edf3",
+   "defaultAccent": "#ff2bd6",
+   "defaultRim": "#9aa1ab",
+   "defaultCaliper": "#ff2bd6",
+   "dimensions": {
+    "length": 4.68,
+    "width": 2.028,
+    "height": 1.111
+   },
+   "wheelbase": 2.82,
+   "wheels": [
+    {
+     "node": "Wheel_FL",
+     "caliper": "Caliper_FL",
+     "position": [
+      0.846,
+      0.35,
+      1.42
+     ],
+     "radius": 0.35,
+     "width": 0.28,
+     "steer": true,
+     "drive": true
+    },
+    {
+     "node": "Wheel_FR",
+     "caliper": "Caliper_FR",
+     "position": [
+      -0.846,
+      0.35,
+      1.42
+     ],
+     "radius": 0.35,
+     "width": 0.28,
+     "steer": true,
+     "drive": true
+    },
+    {
+     "node": "Wheel_RL",
+     "caliper": "Caliper_RL",
+     "position": [
+      0.846,
+      0.36,
+      -1.4
+     ],
+     "radius": 0.36,
+     "width": 0.32,
+     "steer": false,
+     "drive": true
+    },
+    {
+     "node": "Wheel_RR",
+     "caliper": "Caliper_RR",
+     "position": [
+      -0.846,
+      0.36,
+      -1.4
+     ],
+     "radius": 0.36,
+     "width": 0.32,
+     "steer": false,
+     "drive": true
+    }
+   ],
+   "stats": {
+    "massKg": 1850,
+    "powerKw": 1100,
+    "drive": "AWD",
+    "topSpeedKmh": 350,
+    "grip": 1.2,
+    "suspension": "adaptiv"
+   },
+   "physics": {
+    "massKg": 1850,
+    "cogHeight": 0.38,
+    "weightFront": 0.46,
+    "dragCd": 0.28,
+    "frontalArea": 1.98,
+    "powerKw": 1100,
+    "torqueNm": 2300,
+    "idleRpm": 0,
+    "redlineRpm": 20000,
+    "electric": true,
+    "gears": [
+     1.0
+    ],
+    "finalDrive": 8.2,
+    "suspension": {
+     "springFront": 50000,
+     "springRear": 56000,
+     "damping": 0.45,
+     "travel": 0.11,
+     "antiRollFront": 0.8,
+     "antiRollRear": 0.75,
+     "adaptive": true
+    },
+    "tire": {
+     "grip": 1.2,
+     "slipPeak": 0.09
+    },
+    "brakeForce": 1.4,
+    "brakeBias": 0.58,
+    "steerLockDeg": 30,
+    "torqueVectoring": true
+   },
+   "tuning": {
+    "engine": [
+     {
+      "name": "Serie (4 Motoren)",
+      "powerKw": 1100,
+      "torqueNm": 2300
+     },
+     {
+      "name": "Overboost",
+      "powerKw": 1250,
+      "torqueNm": 2450
+     },
+     {
+      "name": "Track-Paket",
+      "powerKw": 1350,
+      "torqueNm": 2550
+     },
+     {
+      "name": "Hyper-Modus",
+      "powerKw": 1500,
+      "torqueNm": 2700
+     }
+    ],
+    "exhaust": [
+     {
+      "name": "Lautlos",
+      "loudness": 0
+     },
+     {
+      "name": "Sound-Modul Synth",
+      "loudness": 3
+     },
+     {
+      "name": "Sound-Modul Turbine",
+      "loudness": 5
+     }
+    ],
+    "cage": [
+     {
+      "name": "Kein Käfig"
+     },
+     {
+      "name": "Halbkäfig",
+      "massKg": 15,
+      "stiffness": 1.04
+     },
+     {
+      "name": "Vollkäfig",
+      "massKg": 28,
+      "stiffness": 1.1
+     }
+    ]
+   },
+   "plate": "E 2077",
+   "gauges": {
+    "speedMaxKmh": 400,
+    "rpmMaxThousand": 20,
+    "sweepDeg": 270,
+    "cluster": "digital",
+    "center": "floating",
+    "rearScreens": false
+   },
+   "cockpit": {
+    "eye": [
+     0.33,
+     0.9,
+     -0.303
+    ],
+    "steeringWheel": [
+     0.33,
+     0.6,
+     0.317
+    ],
+    "steeringRatioDeg": 360
+   },
+   "lights": {
+    "head": [
+     [
+      0.64,
+      0.415,
+      2.254
+     ]
+    ],
+    "drl": [
+     [
+      0.0,
+      0.392,
+      2.289
+     ]
+    ],
+    "tail": [
+     [
+      0.0,
+      0.69,
+      -2.308
+     ]
+    ]
+   },
+   "exhaustOutlets": {},
+   "maxLoweringCm": 4,
+   "rims": [
+    "Aero-Turbine",
+    "Vielspeiche",
+    "Y-Speiche"
+   ],
+   "spoilers": [
+    "Lippe",
+    "GT-Flügel",
+    "Cyber-Flügel"
+   ],
+   "liveries": [
+    "Rennstreifen",
+    "Seitenblitz",
+    "Startnummer"
+   ],
+   "triangles": {
+    "L0": 106301,
+    "L1": 20864,
+    "L2": 12100
+   },
+   "fileBytes": 5699876
   }
  ]
 }

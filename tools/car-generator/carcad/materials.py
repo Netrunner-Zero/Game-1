@@ -193,6 +193,8 @@ def library(p):
         "EngineBlack": {"color": "#101012", "metallic": 0.3, "roughness": 0.5},
         "EngineRed": {"color": "#a8121c", "metallic": 0.2, "roughness": 0.35, "clearcoat": (1.0, 0.05)},
         "Hose": {"color": "#0a0a0b", "roughness": 0.7},
+        "Copper": {"color": [0.95, 0.55, 0.36], "metallic": 1.0, "roughness": 0.28},
+        "HVOrange": {"color": "#ff6a00", "roughness": 0.55},
         # ---------------- Deko ----------------
         "DecoWhite": {"color": "#e8e9ec", "roughness": 0.25, "clearcoat": (1.0, 0.04)},
         "Visor": {"color": "#030305", "metallic": 0.6, "roughness": 0.04},

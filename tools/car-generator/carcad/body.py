@@ -534,6 +534,8 @@ class Body:
                 return "pillar"
             if kind == "roof" and corner:
                 return "roof"          # Dachrahmen über den Seitenscheiben (gleiche Breite wie die Säulen)
+            if kind == "glassroof" and corner:
+                return "pillar"        # Rahmen zwischen Glasdach und Seitenscheiben
             if kind == "rear" and not on_roof and self.spec.get("rear_side") == "paint":
                 return "pillar"        # Fastback: geschlossene C-Säulen-Flanke statt Seitenscheibe
             if on_roof:

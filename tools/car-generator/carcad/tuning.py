@@ -225,6 +225,19 @@ def exhausts(ctx):
     for vi, layout in enumerate(ex["variants"]):
         p = Part("Exhaust_%d" % (vi + 1))
         for item in layout:
+            if item[0] == "panel":
+                # Elektroauto: Sound-Modul-Schlitze (leuchtend) statt Endrohren
+                _, x, y, w, h, mat = item
+                for sx in ((1, -1) if x > 1e-6 else (1,)):
+                    hit = ctx.hit_rear(sx * x, y)
+                    if hit is None:
+                        continue
+                    loc = Part("slot")
+                    o = round_rect(w, h, h * 0.45, 4)
+                    secs = [[np.array([u * s_, v * s_, wv]) for (u, v) in o] for (wv, s_) in ((-0.002, 1.0), (0.003, 0.97))]
+                    loc.loft(secs, lambda k, j: "Trim", caps=(None, mat), smooth=False)
+                    conform_part(ctx, loc, hit[0], hit[1], (w, h), dst=p, mirror=False)
+                continue
             if item[0] == "side":
                 # Sidepipes vor dem Hinterrad, Mündung zeigt zur Seite
                 _, z, y, r, mat = item
