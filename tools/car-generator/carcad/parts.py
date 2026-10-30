@@ -337,6 +337,23 @@ def lamp_local(spec, lod=0):
         elif kind == "chrome":
             flat_shape(p, el[1], wv - 0.02, "Reflector")
     pillow(p, outline, spec.get("dome", 0.006), spec.get("lens", "LampGlass"), w0=0.001)
+    if spec.get("bezel"):
+        # Zierring (z. B. Chrom) um die Lampe, deckt den Glasrand ab
+        bw, bmat = spec["bezel"]
+        P = np.array(densify(outline, 0.012))
+        cen = P.mean(axis=0)
+        hx = (P[:, 0].max() - P[:, 0].min()) / 2
+        hy = (P[:, 1].max() - P[:, 1].min()) / 2
+        k = np.array([1 - bw / max(hx, 1e-6), 1 - bw / max(hy, 1e-6)])
+        inner = cen + (P - cen) * k
+        n = len(P)
+        for i in range(n):
+            j = (i + 1) % n
+            a0, a1 = np.array([*P[i], 0.005]), np.array([*P[j], 0.005])
+            b0, b1 = np.array([*inner[i], 0.004]), np.array([*inner[j], 0.004])
+            p.quad(a0, a1, b1, b0, bmat, outward=(0, 0, 1))
+            p.quad(np.array([*P[i], -0.002]), np.array([*P[j], -0.002]), a1, a0, bmat,
+                   hint=np.array([cen[0], cen[1], 0.0]))
     return p
 
 

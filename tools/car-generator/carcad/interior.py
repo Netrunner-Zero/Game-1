@@ -556,7 +556,7 @@ class Cockpit:
     # --------------------------------------------------------------
     # Sitze
     # --------------------------------------------------------------
-    def seat(self, x, z, kind="bucket", recline=18.0, width=0.52, back_h=None, rear=False):
+    def seat(self, x, z, kind="bucket", recline=18.0, width=0.52, back_h=None, rear=False, headrest=True):
         """Sitz in Fahrtrichtung: gepolsterte Sitzfläche und Lehne als geschlossene Körper
         mit Seitenwangen, Mittelbahn (SeatInsert), Ziernähten und Rückschale.
 
@@ -577,7 +577,7 @@ class Cockpit:
         y0 = fl + 0.045
         L = 0.50 if not rear else 0.47
         zf, zb = z + L / 2, z - L / 2
-        M = 56
+        M = 12 * 4                      # 12 Eckpunkte x (3 + 1) Rundungspunkte
 
         def cushion_section(t):
             yct = yc + 0.028 * (1 - t) ** 2 - 0.012 * t
@@ -589,7 +589,7 @@ class Cockpit:
                    (-(h2 - bw - 0.03), yct), (-(h2 - bw), yct + 0.012), (-(h2 - bw * 0.45), yct + bbt),
                    (-h2, yct + bbt * 0.55), (-h2, y0 + 0.04)]
             rad = [0.015, 0.015, 0.03, 0.035, 0.03, 0.03, 0.02, 0.02, 0.03, 0.03, 0.035, 0.03]
-            return resample(round_poly(pts, rad, 3), M, closed=True), yct, h2
+            return round_poly(pts, rad, 3), yct, h2         # feste Punktzuordnung je Ecke (kein Verdrehen)
 
         # Sitzfläche: Schnitte von vorne nach hinten, vorne gerundet
         secs, uvs = [], []
@@ -658,11 +658,12 @@ class Cockpit:
             w2 = back_width(h) / 2
             wd = wing_depth(h)
             bwi = min(bw, w2 * 0.38)
+            db = min(0.03, 0.55 * wd)                 # Wangen-Ansatz bleibt immer unter der Wangenspitze
             pts = [(-w2 + 0.03, -T), (w2 - 0.03, -T), (w2, -T + 0.03), (w2, wd - 0.03), (w2 - 0.025, wd),
-                   (w2 - bwi, 0.03), (w2 - bwi - 0.03, 0.0), (-(w2 - bwi - 0.03), 0.0), (-(w2 - bwi), 0.03),
+                   (w2 - bwi, db), (w2 - bwi - 0.03, 0.0), (-(w2 - bwi - 0.03), 0.0), (-(w2 - bwi), db),
                    (-(w2 - 0.025), wd), (-w2, wd - 0.03), (-w2, -T + 0.03)]
             rad = [0.03, 0.03, 0.03, 0.03, 0.025, 0.035, 0.02, 0.02, 0.035, 0.025, 0.03, 0.03]
-            return resample(round_poly(pts, rad, 3), M, closed=True), w2, bwi
+            return round_poly(pts, rad, 3), w2, bwi
 
         shell = I.get("seat_shell", "Carbon" if kind == "bucket" else "Seat")
         hs = list(np.linspace(0.0, H, 14))
@@ -717,7 +718,7 @@ class Cockpit:
                       M=rot_matrix(-rec, 0, 0))
             # Logo/Prägung in der Kopfstütze
             p.tex_quad(base + up * (H * 0.88) + fwd * 0.0045, (-1, 0, 0), up, 0.07, 0.07, "Badge")
-        else:
+        elif headrest:
             # Kopfstütze auf Stangen
             hr = top + up * 0.13 + fwd * 0.015
             p.rbox(hr, (0.27, 0.16, 0.10), 0.045, "Seat", M=rot_matrix(-rec, 0, 0), segs=3)
@@ -745,12 +746,13 @@ class Cockpit:
                 for sx in (1, 0, -1):
                     w_ = 0.42 if sx != 0 else 0.34
                     self.seat(sx * 0.4, zr_, "comfort", rear.get("recline", 24), width=w_, back_h=rear.get("back_h", 0.5),
-                              rear=True)
+                              rear=True, headrest=rear.get("headrest", sx != 0))
             else:
                 for sx, name in ((1, "rear_l"), (-1, "rear_r")):
                     self.seat_info[name] = self.seat(sx * rear.get("x", 0.36), zr_, rear.get("kind", "comfort"),
                                                      rear.get("recline", 26), width=rear.get("w", 0.54),
-                                                     back_h=rear.get("back_h", 0.56), rear=True)
+                                                     back_h=rear.get("back_h", 0.56), rear=True,
+                                                     headrest=rear.get("headrest", True))
                 if rear.get("console"):
                     self.part.rbox((0, self.floor + 0.3, zr_ + 0.05), (0.2, 0.18, 0.5), 0.03, "Seat", segs=3)
                     self.part.rbox((0, self.floor + 0.395, zr_ + 0.05), (0.12, 0.012, 0.3), 0.004, "InteriorTrim", segs=2)

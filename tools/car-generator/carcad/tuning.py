@@ -75,7 +75,7 @@ def spoilers(ctx):
     top_rows, bot_rows = [], []
     for z in zs:
         t = (z - (zt - over)) / (lip_len + over)
-        rise = lip_rise * (1 - t) ** 1.4
+        rise = lip_rise * max(0.0, 1 - t) ** 1.4
         trow, brow = [], []
         for x in xs:
             ys = y_at(z) if (roof or abs(x) < 0.5) else b.top_y(z, x)

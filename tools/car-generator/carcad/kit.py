@@ -432,3 +432,112 @@ def roof_scoop(ctx, z0, z1, w=0.24, h=0.10, mat="Carbon", part="Scoop"):
         prof = [q + np.array([0, 0, 0.004 if z0 > z1 else -0.004]) for q in s0]
         rim.sweep(prof, round_rect(0.012, 0.012, 0.005, 1), "Trim", up=(0, 0, 1), closed_profile=True, caps=False)
         p.merge(rim)
+
+
+# ----------------------------------------------------------------------
+# Klassische Teile: Stoßstangen, Seitenleuchten, Hutzen, Kompressor
+# ----------------------------------------------------------------------
+
+def bumper(ctx, y, z_from, h=0.09, out=0.05, thick=0.07, front=True, mat="Chrome", part="Bumpers", depth=0.5):
+    """Stoßstange als Profil entlang der Grundriss-Kontur (rund um Front oder Heck)."""
+    ring, zc = plan_ring(ctx, y, z_from, front=front, n_side=6, n_arc=36, depth=depth)
+    if len(ring) < 4:
+        return
+    ref = (0.0, zc)
+    path2 = offset_line(ring, out - thick / 2, ref)
+    path = [np.array([x, y, z]) for (x, z) in path2]
+    prof = round_rect(thick, h, min(thick, h) * 0.42, 3)
+    p = ctx.part(part)
+    tmp = Part("bumper")
+    tmp.sweep(path, [(u, v) for (u, v) in prof], mat, up=(0, 1, 0), caps=True, smooth=True)
+    p.merge(tmp)
+    # Gummileiste (Prallstreifen) mittig
+    if ctx.lod == 0:
+        path_r = [np.array([x, y, z]) for (x, z) in offset_line(ring, out + 0.004, ref)]
+        tmp2 = Part("strip")
+        tmp2.sweep(path_r, round_rect(0.012, h * 0.28, 0.005, 1), "Rubber", up=(0, 1, 0), caps=True, smooth=True)
+        p.merge(tmp2)
+
+
+def side_lamp(ctx, z, y, w, h, mat="Indicator", lens="LampGlass", part="Lights", kind="marker"):
+    """Kleine Seitenleuchte (Seitenmarkierung/Blinker) – beide Seiten."""
+    spec = {"w": w, "h": h, "r": min(w, h) * 0.3, "depth": 0.02, "dome": 0.003, "lens": lens, "kind": kind,
+            "elements": [("panel", rr_outline(w * 0.8, h * 0.6, min(w, h) * 0.2, 2), mat)]}
+    from .parts import lamp_local as _ll
+    local = _ll(spec, ctx.lod)
+    outline = rr_outline(w, h, min(w, h) * 0.3, 4)
+    place_side(ctx, local, z, y, (w, h), ctx.part(part), mirror=True, cut=outline if ctx.lod == 0 else None)
+
+
+def hood_bulge(ctx, z0, z1, w, h, mat="Paint", part="BodyAdd", x=0.0, ramp_u=0.22, ramp_v=0.14):
+    """Aufgesetzte Wölbung (Power-Dome) auf der Motorhaube."""
+    L = abs(z1 - z0)
+    outline = rr_outline(w, L, min(w, L) * 0.25, 6)
+
+    def sm(t):
+        t = min(max(t, 0.0), 1.0)
+        return t * t * (3 - 2 * t)
+
+    def wfn(u, v, su, sv):
+        return -0.002 + (h + 0.002) * sm(min(su, 1 - su) / ramp_u) * sm(min(sv, 1 - sv) / ramp_v)
+
+    loc = Part("bulge")
+    fill_shape(loc, outline, wfn, mat, outward=(0, 0, 1), max_du=0.03, max_dv=0.03, smooth=True)
+    place_top(ctx, loc, x, (z0 + z1) / 2, (w, L), ctx.part(part), mirror=False, up_hint=(0, 0, 1))
+
+
+def hood_scoop(ctx, z_back, z_front, w, h, mat="Paint", inner="Mesh", part="BodyAdd", x=0.0, open_front=True):
+    """Lufthutze auf der Haube. Öffnung vorne (Ram-Air) oder hinten (Cowl Induction)."""
+    L = abs(z_front - z_back)
+    lod = ctx.lod
+    loc = Part("scoop")
+    n = 10 if lod == 0 else 4
+    secs = []
+    for i in range(n + 1):
+        t = i / n                                   # 0 = Öffnung, 1 = auslaufendes Ende
+        v = (L / 2 - t * L) if open_front else (-L / 2 + t * L)
+        hh = h * (1 - t ** 2) + 0.002
+        ww = w * (1 - 0.25 * t)
+        prof = round_open([(ww / 2 + 0.012, -0.003), (ww / 2, hh * 0.85), (0.0, hh), (-ww / 2, hh * 0.85),
+                           (-ww / 2 - 0.012, -0.003)], [0, 0.02, 0.04, 0.02, 0], 3)
+        secs.append([np.array([u, v, wv]) for (u, wv) in prof])
+    loc.loft(secs, lambda k, j: mat, closed=False, smooth=True, hint_fn=lambda k: np.array([0.0, 0.0, -0.5]))
+    # Öffnung (dunkel, leicht nach innen versetzt)
+    s0 = secs[0]
+    c0 = sum(s0) / len(s0)
+    off = np.array([0, -0.004 if open_front else 0.004, 0])
+    for j in range(len(s0) - 1):
+        loc.tri(c0 + off, s0[j] + off, s0[j + 1] + off, inner, outward=(0, 1 if open_front else -1, 0))
+    place_top(ctx, loc, x, (z_front + z_back) / 2, (w, L), ctx.part(part), mirror=False, up_hint=(0, 0, 1))
+
+
+def blower(part, c, length=0.36, width=0.30, height=0.20, lod=0, hat=True):
+    """Kompressor (Roots-Gebläse) mit Riementrieb und Einspritz-Hut; c = Mitte Unterkante."""
+    c = np.asarray(c, dtype=float)
+    part.rbox(c + np.array([0, height * 0.45, 0]), (width, height * 0.9, length), 0.035, "Aluminum", segs=3)
+    if lod == 0:
+        for k in range(7):                          # Kühlrippen
+            zz = -length * 0.42 + length * 0.84 * k / 6
+            part.box(c + np.array([0, height * 0.45, zz]), (width + 0.012, height * 0.7, 0.008), "Aluminum")
+        # Riemenscheiben + Riemen vorne
+        for (yy, r) in ((height * 0.6, 0.07), (-0.08, 0.09)):
+            part.lathe([(0.0, 0.0), (0.0, r), (0.03, r), (0.03, 0.0)], 20, "Chrome",
+                       center=(c[0], c[1] + yy, c[2] + length / 2 + 0.01), axis="z", inside=(0.015, r * 0.5))
+        part.box(c + np.array([0.0, height * 0.26 - 0.04, length / 2 + 0.025]), (0.10, 0.36, 0.02), "Rubber")
+    # Ansaug-Platte (Butterfly) oben
+    part.rbox(c + np.array([0, height + 0.02, 0]), (width * 0.7, 0.04, length * 0.7), 0.01, "EngineBlack", segs=2)
+    if hat:
+        part.rbox(c + np.array([0, height + 0.07, 0.02]), (width * 0.62, 0.06, length * 0.62), 0.02, "Chrome", segs=3)
+
+
+def shotgun_scoops(part, c, spread=0.09, length=0.30, r=0.055, mat="Chrome", lod=0):
+    """Zwei runde 'Shotgun'-Hutzen (Rohre nach vorne offen) auf dem Kompressor."""
+    c = np.asarray(c, dtype=float)
+    segs = 24 if lod == 0 else 10
+    for sx in (-1, 1):
+        cc = c + np.array([sx * spread, 0, 0])
+        part.lathe([(-length / 2, r * 0.9), (length * 0.2, r), (length / 2, r * 1.06), (length / 2 + 0.004, r * 0.92),
+                    (length * 0.3, r * 0.88), (-length / 2, r * 0.82)], segs, mat, center=tuple(cc), axis="z",
+                   inside=(0.0, r * 0.95))
+        part.lathe([(length * 0.25, 0.0), (length * 0.25, r * 0.86)], segs, "Mesh", center=tuple(cc), axis="z",
+                   inside=(length * 0.25 - 0.02, 0.0))

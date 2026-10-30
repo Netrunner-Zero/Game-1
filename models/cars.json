@@ -3,7 +3,7 @@
  "generator": "tools/car-generator",
  "units": "Meter, +Y oben, +Z vorne, +X links",
  "sharedTextures": "textures/",
- "sharedTextureBytes": 645116,
+ "sharedTextureBytes": 640626,
  "cars": [
   {
    "id": "vektra_gt",
@@ -312,11 +312,324 @@
     "Startnummer"
    ],
    "triangles": {
-    "L0": 116546,
+    "L0": 115522,
     "L1": 23468,
     "L2": 14660
    },
-   "fileBytes": 6276920
+   "fileBytes": 6248840
+  },
+  {
+   "id": "brawler_77",
+   "name": "Brawler 77",
+   "file": "brawler_77.glb",
+   "description": "Muscle Car mit großem V8, viel Drehmoment, neigt zum Driften",
+   "class": "Muscle Car",
+   "brand": "BRAWLER",
+   "defaultPaint": "#f5a300",
+   "defaultAccent": "#ff3b1f",
+   "defaultRim": "#c9ccd2",
+   "defaultCaliper": "#1d1f23",
+   "dimensions": {
+    "length": 4.82,
+    "width": 2.01,
+    "height": 1.321
+   },
+   "wheelbase": 2.92,
+   "wheels": [
+    {
+     "node": "Wheel_FL",
+     "caliper": "Caliper_FL",
+     "position": [
+      0.8415,
+      0.34,
+      1.5
+     ],
+     "radius": 0.34,
+     "width": 0.255,
+     "steer": true,
+     "drive": false
+    },
+    {
+     "node": "Wheel_FR",
+     "caliper": "Caliper_FR",
+     "position": [
+      -0.8415,
+      0.34,
+      1.5
+     ],
+     "radius": 0.34,
+     "width": 0.255,
+     "steer": true,
+     "drive": false
+    },
+    {
+     "node": "Wheel_RL",
+     "caliper": "Caliper_RL",
+     "position": [
+      0.8315,
+      0.355,
+      -1.42
+     ],
+     "radius": 0.355,
+     "width": 0.315,
+     "steer": false,
+     "drive": true
+    },
+    {
+     "node": "Wheel_RR",
+     "caliper": "Caliper_RR",
+     "position": [
+      -0.8315,
+      0.355,
+      -1.42
+     ],
+     "radius": 0.355,
+     "width": 0.315,
+     "steer": false,
+     "drive": true
+    }
+   ],
+   "stats": {
+    "massKg": 1650,
+    "powerKw": 450,
+    "drive": "RWD",
+    "topSpeedKmh": 290,
+    "grip": 0.88,
+    "suspension": "weich"
+   },
+   "physics": {
+    "massKg": 1650,
+    "cogHeight": 0.52,
+    "weightFront": 0.55,
+    "dragCd": 0.42,
+    "frontalArea": 2.15,
+    "powerKw": 450,
+    "torqueNm": 820,
+    "idleRpm": 750,
+    "redlineRpm": 6600,
+    "gears": [
+     2.97,
+     2.07,
+     1.43,
+     1.0,
+     0.84,
+     0.56
+    ],
+    "finalDrive": 3.55,
+    "suspension": {
+     "springFront": 32000,
+     "springRear": 30000,
+     "damping": 0.3,
+     "travel": 0.14,
+     "antiRollFront": 0.6,
+     "antiRollRear": 0.35
+    },
+    "tire": {
+     "grip": 0.88,
+     "slipPeak": 0.11,
+     "rearGripFactor": 0.92
+    },
+    "brakeForce": 1.0,
+    "brakeBias": 0.6,
+    "steerLockDeg": 34
+   },
+   "tuning": {
+    "engine": [
+     {
+      "name": "Serie V8",
+      "powerKw": 450,
+      "torqueNm": 820
+     },
+     {
+      "name": "Ram-Air-Hutze",
+      "powerKw": 480,
+      "torqueNm": 860
+     },
+     {
+      "name": "Kompressor",
+      "powerKw": 580,
+      "torqueNm": 980
+     },
+     {
+      "name": "Shotgun + Lachgas",
+      "powerKw": 660,
+      "torqueNm": 1080
+     }
+    ],
+    "exhaust": [
+     {
+      "name": "Serie (Doppelrohr)",
+      "loudness": 2
+     },
+     {
+      "name": "Sport (4 Rohre)",
+      "loudness": 5
+     },
+     {
+      "name": "Sidepipes",
+      "loudness": 9
+     }
+    ],
+    "cage": [
+     {
+      "name": "Kein Käfig"
+     },
+     {
+      "name": "Halbkäfig",
+      "massKg": 18,
+      "stiffness": 1.06
+     },
+     {
+      "name": "Vollkäfig",
+      "massKg": 34,
+      "stiffness": 1.14
+     }
+    ]
+   },
+   "plate": "BR 1977",
+   "gauges": {
+    "speedMaxKmh": 300,
+    "rpmMaxThousand": 8,
+    "sweepDeg": 270,
+    "cluster": "analog",
+    "center": "retro",
+    "rearScreens": false
+   },
+   "cockpit": {
+    "eye": [
+     0.33,
+     1.164,
+     -0.793
+    ],
+    "steeringWheel": [
+     0.33,
+     0.884,
+     -0.153
+    ],
+    "steeringRatioDeg": 540
+   },
+   "lights": {
+    "head": [
+     [
+      0.7,
+      0.635,
+      2.42
+     ],
+     [
+      0.52,
+      0.635,
+      2.42
+     ]
+    ],
+    "indicator": [
+     [
+      0.58,
+      0.3,
+      2.394
+     ]
+    ],
+    "tail": [
+     [
+      0.56,
+      0.715,
+      -2.4
+     ]
+    ]
+   },
+   "exhaustOutlets": {
+    "1": [
+     [
+      0.6,
+      0.27,
+      -2.396,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.6,
+      0.27,
+      -2.396,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "2": [
+     [
+      0.52,
+      0.27,
+      -2.396,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      0.65,
+      0.27,
+      -2.396,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.52,
+      0.27,
+      -2.396,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.65,
+      0.27,
+      -2.396,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "3": [
+     [
+      0.99,
+      0.27,
+      -0.9,
+      1.0,
+      0.0,
+      0.0
+     ],
+     [
+      -0.99,
+      0.27,
+      -0.9,
+      -1.0,
+      0.0,
+      0.0
+     ]
+    ]
+   },
+   "maxLoweringCm": 5,
+   "rims": [
+    "Klassik 5-Speiche",
+    "Kreuzspeiche",
+    "Gitter"
+   ],
+   "spoilers": [
+    "Lippe",
+    "GT-Flügel",
+    "Cyber-Flügel"
+   ],
+   "liveries": [
+    "Rennstreifen",
+    "Seitenblitz",
+    "Startnummer"
+   ],
+   "triangles": {
+    "L0": 115071,
+    "L1": 20244,
+    "L2": 10458
+   },
+   "fileBytes": 5828856
   }
  ]
 }

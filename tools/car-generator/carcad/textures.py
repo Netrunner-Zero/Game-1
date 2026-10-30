@@ -125,7 +125,7 @@ def carbon(size=512, tows=8):
     streak = np.where(horiz, np.roll(streak_h, 0, 1), streak_h.T)
     # Fasern entlang der Faserrichtung
     fib = np.where(horiz, np.sin(yy * 2.1) * 0.5 + 0.5, np.sin(xx * 2.1) * 0.5 + 0.5)
-    base = 0.05 + 0.09 * bulge * (0.7 + 0.3 * fib) + 0.03 * streak
+    base = 0.014 + 0.055 * bulge * (0.7 + 0.3 * fib) + 0.016 * streak
     sheen = np.where(horiz, 1.0, 0.75)
     v = base * sheen
     rgb = np.stack([v * 0.96, v * 0.98, v * 1.05], -1)
@@ -159,7 +159,7 @@ def brushed(size=512, seed=9):
     return Image.fromarray((np.clip(rgb, 0, 1) * 255).astype(np.uint8))
 
 
-def wood(w=1024, h=512, seed=11, tone=(0.32, 0.17, 0.08), dark=(0.14, 0.06, 0.025)):
+def wood(w=1024, h=512, seed=11, tone=(0.20, 0.10, 0.045), dark=(0.075, 0.032, 0.014)):
     """Edelholz-Furnier (Längsmaserung mit Wellen), kachelbar in Längsrichtung."""
     r = rng(seed)
     yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)

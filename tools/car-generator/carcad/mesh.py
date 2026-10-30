@@ -322,7 +322,11 @@ class Part:
                 P = [secs[k][j], secs[k][j2], secs[k + 1][j2], secs[k + 1][j]]
                 nn = [N[k][j], N[k][j2], N[k + 1][j2], N[k + 1][j]] if N is not None else None
                 uu = [uvs[k][j], uvs[k][j2], uvs[k + 1][j2], uvs[k + 1][j]] if uvs is not None else None
-                self.quad(P[0], P[1], P[2], P[3], mat, hint, nn, uu)
+                if nn is not None:
+                    # Ausrichtung aus den Gitternormalen (robust auch bei konkaven Querschnitten)
+                    self.quad(P[0], P[1], P[2], P[3], mat, None, nn, uu, outward=nn[0] + nn[1] + nn[2] + nn[3])
+                else:
+                    self.quad(P[0], P[1], P[2], P[3], mat, hint, nn, uu)
         for idx, nb, cm in ((0, 1, caps[0]), (K - 1, K - 2, caps[1])):
             if cm is None:
                 continue
