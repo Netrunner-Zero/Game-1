@@ -78,8 +78,9 @@ export class Vehicle {
     const unsprung = new Set();
     this.root.traverse((o) => {
       const u = o.userData || {};
-      if (u.wheel) this.wheels.push({ obj: o, pos: u.wheel, steer: !!u.steer, radius: u.radius || 0.33, base: o.quaternion.clone() });
-      if (u.caliper) this.calipers.push({ obj: o, steer: !!u.steer, base: o.quaternion.clone() });
+      if (u.wheel) this.wheels.push({ obj: o, pos: u.wheel, steer: !!u.steer, radius: u.radius || 0.33, base: o.quaternion.clone(),
+        basePos: o.position.clone() });
+      if (u.caliper) this.calipers.push({ obj: o, pos: u.caliper, steer: !!u.steer, base: o.quaternion.clone(), basePos: o.position.clone() });
       if (u.tune && this.tune[u.tune]) this.tune[u.tune].push(o);
       if (u.lod !== undefined && o.parent) {
         if (!lodParents.has(o.parent)) lodParents.set(o.parent, []);
@@ -109,6 +110,16 @@ export class Vehicle {
     const isWheel = new Set([...this.wheels.map((w) => w.obj), ...this.calipers.map((c) => c.obj), ...unsprung]);
     this.bodyNodes = this.carRoot.children.filter((c) => !isWheel.has(c) && c !== this.shadow);
     for (const n of this.bodyNodes) n.userData.baseY = n.position.y;
+    // Aufbau (gefedert) in eigene Gruppe: nickt, wankt und hebt sich mit der Federung, Räder bleiben am Boden.
+    // bodyPivot liegt im Drehpunkt (Schwerpunkt), bodyInner verschiebt zurück – in Ruhe ist alles wie im Modell.
+    this.bodyPivot = new THREE.Group();
+    this.bodyPivot.name = 'BodyPivot';
+    this.bodyInner = new THREE.Group();
+    this.bodyInner.name = 'BodyInner';
+    this.bodyPivot.add(this.bodyInner);
+    this.carRoot.add(this.bodyPivot);
+    for (const n of this.bodyNodes) this.bodyInner.add(n);
+    for (const c of this.calipers) c.wheel = this.wheels.find((w) => w.pos === c.pos) || null;
     this._prepareMaterials();
   }
 
@@ -296,8 +307,8 @@ export class Vehicle {
         spot.target.position.set(sx * Math.abs(p[0]) * 1.4, 0.0, p[2] + 14);
         spot.castShadow = false;
         spot.visible = this.state.lights;
-        this.root.add(spot);
-        this.root.add(spot.target);
+        this.bodyInner.add(spot);
+        this.bodyInner.add(spot.target);
         this.headLamps.push(spot);
       }
     }
@@ -309,7 +320,7 @@ export class Vehicle {
     const eye = (this.meta.cockpit && this.meta.cockpit.eye) || [0.3, 1.0, 0];
     const l = new THREE.PointLight(0xffe2c0, 0.6 * this.settingsView.interiorLight, 1.6, 2);
     l.position.set(0, eye[1] + 0.05, eye[2] + 0.2);
-    this.root.add(l);
+    this.bodyInner.add(l);
     this.cabinLight = l;
     return l;
   }
@@ -363,14 +374,21 @@ export class Vehicle {
     const X = new THREE.Vector3(1, 0, 0), Y = new THREE.Vector3(0, 1, 0), Z = new THREE.Vector3(0, 0, 1);
     for (const w of this.wheels) {
       if (w.spin === undefined) w.spin = 0;
-      w.spin += (v / w.radius) * dt;
-      qSteer.setFromAxisAngle(Y, w.steer ? -steerAngle : 0);
+      // mit Fahrphysik: echte Raddrehzahl (Durchdrehen, Blockieren), Radlenkwinkel und Federweg
+      w.spin += (w.physOmega !== undefined ? w.physOmega : v / w.radius) * dt;
+      w.spin %= Math.PI * 2;
+      const st = w.physSteer !== undefined ? w.physSteer : -steerAngle;
+      qSteer.setFromAxisAngle(Y, w.steer ? st : 0);
       qSpin.setFromAxisAngle(X, w.spin);
       w.obj.quaternion.copy(w.base).multiply(qSteer).multiply(qSpin);
+      w.obj.position.y = w.basePos.y + (w.offsetY || 0);
     }
     for (const c of this.calipers) {
-      qSteer.setFromAxisAngle(Y, c.steer ? -steerAngle : 0);
+      const w = c.wheel;
+      const st = w && w.physSteer !== undefined ? w.physSteer : -steerAngle;
+      qSteer.setFromAxisAngle(Y, c.steer ? st : 0);
       c.obj.quaternion.copy(c.base).multiply(qSteer);
+      c.obj.position.y = c.basePos.y + ((w && w.offsetY) || 0);
     }
     const ratio = (this.meta.cockpit && this.meta.cockpit.steeringRatioDeg) || 450;
     if (this.anim.steering) {
@@ -395,6 +413,45 @@ export class Vehicle {
     if (L) L.emissiveIntensity = left ? (L.userData.active || 5.0) : 0;
     if (R) R.emissiveIntensity = right ? (R.userData.active || 5.0) : 0;
     this.displays.update(time);
+  }
+
+  /**
+   * Pose und Anzeigen aus der Fahrphysik (CarPhysics) übernehmen: Position, Gieren, Federung
+   * (Heben/Nicken/Wanken des Aufbaus), Räder (Drehzahl, Lenkwinkel, Einfederung) und Instrumente.
+   */
+  syncPhysics(p, input = {}) {
+    const sy = Math.sin(p.yaw), cy = Math.cos(p.yaw);
+    let gy = 0;
+    for (const w of p.wheels) gy += w.groundY;
+    gy /= p.wheels.length;
+    // Modell-Ursprung liegt bei z = 0 (Modell), der Schwerpunkt der Physik bei z = zcg
+    this.object.position.set(p.pos.x - sy * p.zcg, gy, p.pos.z - cy * p.zcg);
+    this.object.rotation.set(0, p.yaw, 0);
+    const heave = p.pos.y - p.hcg - gy;
+    this.bodyPivot.position.set(0, p.hcg + heave, p.zcg);
+    this.bodyPivot.rotation.set(p.pitch, 0, p.roll);
+    this.bodyInner.position.set(0, -p.hcg, -p.zcg);
+    for (const w of this.wheels) {
+      const pw = p.wheels.find((q) => q.name === w.pos);
+      if (!pw) continue;
+      w.physOmega = pw.omega;
+      w.physSteer = pw.front ? p.steerAngle : 0;
+      w.offsetY = Math.max(-0.25, Math.min(0.25, (pw.centerY - gy) - w.basePos.y));
+    }
+    if (this.shadow) this.shadow.visible = p.airTime < 0.25 || p.pos.y - p.hcg - gy < 0.6;
+    const s = this.state;
+    s.speedKmh = p.speedKmh;
+    s.rpm = p.rpm;
+    s.gear = p.gearLabel();
+    s.steer = -p.steerAngle / p.steerLock;
+    s.reverse = p.gear < 0;
+    // im Rückwärtsgang ist „Bremse“ das Fahrpedal und „Gas“ die Bremse (wie in CarPhysics)
+    s.throttle = p.gear < 0 ? (input.brake || 0) : (input.throttle || 0);
+    const br = p.gear < 0 ? (input.throttle || 0) : (input.brake || 0);
+    if ((s.brake > 0.05) !== (br > 0.05) || s.reverseShown !== s.reverse) {
+      s.brake = br; s.reverseShown = s.reverse; this._applyLights();
+    }
+    s.brake = br;
   }
 
   setBrake(v) {

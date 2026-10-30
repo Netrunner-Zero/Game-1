@@ -408,6 +408,9 @@ def build_car(spec, out_dir, shared_tex, log=print):
                        "width": round(2 * float(np.abs(body0.S[:, :, 0]).max()), 3),
                        "height": round(cab_top, 3)},
         "wheelbase": round(spec["wheels"]["front"]["z"] - spec["wheels"]["rear"]["z"], 3),
+        # Außenmaße der Karosserie (Stoßstangen, Anbauteile) – für Kollisionen und Verkehr im Spiel
+        "bounds": {"min": [round(float(v), 3) for v in bodies[2].bounds()[0]],
+                   "max": [round(float(v), 3) for v in bodies[2].bounds()[1]]},
         "wheels": wheel_info, "stats": st, "physics": spec.get("physics", {}),
         "tuning": spec.get("tuning", {}), "plate": spec["plate"],
         "gauges": {"speedMaxKmh": vmax, "rpmMaxThousand": rpm_max, "sweepDeg": 270,

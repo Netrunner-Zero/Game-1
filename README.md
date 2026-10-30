@@ -2,9 +2,51 @@
 
 Hier entsteht ein 3D-Autospiel in einer futuristischen Stadt (**Neon Haven**). Zurzeit gibt es:
 
-- **die Fahrzeug-Garage** (`garage/`): sechs detaillierte 3D-Autos zum Ansehen, Tunen und Testen – die Grundlage
-  für die offene Spielwelt, die als Nächstes programmiert wird,
+- **das Spiel** (`game/`, in Arbeit): echte Fahrphysik, Steuerung per Touch, Tastatur und Xbox-Controller,
+  fünf Kameras und ein Testgelände – die Stadt, Verkehr und Regen folgen,
+- **die Fahrzeug-Garage** (`garage/`): sechs detaillierte 3D-Autos zum Ansehen, Tunen und Testen,
 - **Highway Dodge** (`index.html`): das ursprüngliche kleine 2D-Ausweichspiel (siehe unten).
+
+## Spiel (Open World, in Arbeit)
+
+- **Online (Branch `open-world`):** <https://raw.githack.com/Netrunner-Zero/Game-1/open-world/game/index.html>
+- **Lokal:** `python3 -m http.server 8000` im Projektordner, dann `http://localhost:8000/game/`
+
+Stand **Schritt 1 – Fahren:** Testgelände am Stadtrand mit 1,15 km langer Geraden (Bremspunkte bei 300/200/100 m),
+Kreisbahn, Slalom und Ausweichtest (Pylonen fliegen weg), Tisch-Sprung, Kicker, Rüttel- und Wellenstrecke,
+Crashwand mit Reifenstapeln und Containern; in der Ferne die Skyline. Tageszeit frei einstellbar (auch nachts).
+
+| Was | Tastatur | Xbox-Controller | Touch |
+|-----|----------|-----------------|-------|
+| Gas / Bremse | W / S (Pfeile) | RT / LT | GAS / BREMSE rechts |
+| Rückwärts | im Stand S halten | im Stand LT halten | im Stand BREMSE halten |
+| Lenken | A / D | linker Stick | links wischen · Neigen · Tasten (Menü) |
+| Handbremse | Leertaste | A | HANDBREMSE |
+| Kamera (Verfolger, weit, Haube, Stoßstange, Cockpit) | C | Y | Kamera-Knopf |
+| Umschauen / nach hinten | Maus ziehen / B | rechter Stick / B | Bild ziehen |
+| Licht, Blinker, Warnblinker | L, Q/E, X | X, LB/RB, Steuerkreuz ↓ | Licht-Knopf |
+| Zurücksetzen (2× = zum Start) | R | Ansicht-Taste | ⟲ |
+| Menü (Auto, Fahrhilfen, Tageszeit, Grafik, Ton) | Esc | Menü-Taste | ☰ |
+
+**Fahrphysik** (`src/physics/CarPhysics.js`): Reifen mit Schlupf und Schräglauf (Reibungsellipse, Lastabhängigkeit),
+Federung mit Stabilisatoren (Gewichtsverlagerung entsteht von selbst), Drehmomentkurve, Automatik, Differenzial
+(Front/Heck/Allrad), Bremskraftverteilung, Handbremse, Hangabtrieb, Sprünge. Fahrhilfen **Voll / Sport / Aus**
+(ABS, ASR, ESP, Gegenlenk-Hilfe). Das Tuning aus der Garage wirkt: mehr Leistung, Käfig = mehr Gewicht,
+Tieferlegung = tieferer Schwerpunkt. **Kollisionen** (`src/physics/collision.js`): gedrehte Rechtecke und Kreise mit
+Stoß und Reibung, Hindernisse in einem Raster, auch bei 300 km/h kein Durchtunneln. **Ton** wird live erzeugt
+(Motor nach Zylinderzahl, Elektro-Pfeifen, Reifen, Wind, Aufprall).
+
+Tests ohne Browser:
+
+```bash
+node tests/physics.test.mjs      # 0–100, Vmax, Bremsweg, Querbeschleunigung, Rückwärts, Handbremse, Stabilität
+node tests/collision.test.mjs    # Mauer mit 300 km/h, Wand streifen, Pfosten, Auto gegen Auto
+node tests/world.test.mjs        # Testgelände abfahren: Gerade, Sprung, Wellen, Crashwand, Kreisbahn
+node tests/smoke/run.mjs         # ganzes Spiel mit Ersatz-three.js: Laden, Fahren, Kameras, Menü, Autowechsel, Nacht, Touch
+```
+
+Die Karten erzeugt `tools/world-generator` (Python, wie die Autos): `python3 tools/world-generator/generate.py`
+schreibt `world/<karte>.glb` (Grafik) und `world/<karte>.json` (Kollisionen, Rampen, Pylonen, Startplätze, Zonen).
 
 ## Garage öffnen
 

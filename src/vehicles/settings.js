@@ -7,6 +7,7 @@
 // bloom              Leuchten um helle Flächen (nur Qualität Mittel/Hoch)
 // showFps            Leistungsanzeige
 // lodMode            'auto' | '0' | '1' | '2' (Detailstufe erzwingen, zum Testen)
+// Spiel: assists, camera, touchSteer, steerSens, volume, timeOfDay, timeFlow (siehe unten)
 
 const KEY = 'neonHaven.settings.v1';
 
@@ -18,6 +19,14 @@ export const DEFAULT_SETTINGS = Object.freeze({
   bloom: true,
   showFps: false,
   lodMode: 'auto',
+  // Spiel (Open World)
+  assists: 'full',          // Fahrhilfen: 'full' | 'sport' | 'off'
+  camera: 'chase',          // zuletzt benutzte Kamera
+  touchSteer: 'swipe',      // Touch-Lenkung: 'swipe' | 'tilt' | 'buttons'
+  steerSens: 1.0,           // Lenkempfindlichkeit 0.5..1.5
+  volume: 0.7,              // Lautstärke 0..1
+  timeOfDay: 16.5,          // Tageszeit in Stunden
+  timeFlow: false,          // Zeit läuft (ein Tag = 24 Minuten)
 });
 
 function load() {
@@ -41,6 +50,13 @@ export class Settings extends EventTarget {
     const ex = Number(this.values.exposure);
     this.values.exposure = Number.isFinite(ex) ? Math.min(1.6, Math.max(0.5, ex)) : DEFAULT_SETTINGS.exposure;
     if (!['auto', 'low', 'medium', 'high'].includes(this.values.quality)) this.values.quality = 'auto';
+    if (!['full', 'sport', 'off'].includes(this.values.assists)) this.values.assists = 'full';
+    if (!['swipe', 'tilt', 'buttons'].includes(this.values.touchSteer)) this.values.touchSteer = 'swipe';
+    const ss = Number(this.values.steerSens);
+    this.values.steerSens = Number.isFinite(ss) ? Math.min(1.5, Math.max(0.5, ss)) : 1;
+    this.values.volume = clamp01(Number(this.values.volume), DEFAULT_SETTINGS.volume);
+    const tod = Number(this.values.timeOfDay);
+    this.values.timeOfDay = Number.isFinite(tod) ? ((tod % 24) + 24) % 24 : DEFAULT_SETTINGS.timeOfDay;
   }
 
   get(key) {

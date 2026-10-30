@@ -1,0 +1,9 @@
+{
+ "maps": [
+  {
+   "id": "testgelaende",
+   "name": "Testgelände",
+   "file": "testgelaende.json"
+  }
+ ]
+}

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Neon Haven</title>
+  <meta name="theme-color" content="#07080c">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" href="game.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <canvas id="view"></canvas>
+  <div id="hud" class="hud"></div>
+
+  <header class="topbar">
+    <div class="brand"><span class="logo">NEON HAVEN</span><span id="zone" class="zone">Testgelände</span></div>
+    <div class="actions">
+      <button id="bCam" class="icon" title="Kamera wechseln (C · Controller Y)" aria-label="Kamera wechseln">
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="14" height="11" rx="2"/><path d="M16 11l6-3v9l-6-3z"/></svg></button>
+      <button id="bLights" class="icon" title="Licht (L · Controller X)" aria-label="Licht">
+        <svg viewBox="0 0 24 24"><path d="M14 6c4 0 7 2.7 7 6s-3 6-7 6c-1.5 0-2-1-2-6s.5-6 2-6z"/><path d="M3 8h6M2 12h7M3 16h6"/></svg></button>
+      <button id="bReset" class="icon" title="Auto zurücksetzen (R · Controller Ansicht)" aria-label="Auto zurücksetzen">
+        <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>
+      <button id="bMenu" class="icon" title="Menü (Esc · Controller Menü)" aria-label="Menü">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    </div>
+  </header>
+
+  <div id="perf" class="perf hidden"></div>
+
+  <div id="touch" class="touch hidden">
+    <div id="steerZone" class="steer-zone"></div>
+    <div class="hint-steer" id="steerHint">← links wischen zum Lenken →</div>
+    <div id="knob" class="knob"><i></i></div>
+    <div id="steerBtns" class="steer-btns hidden"><button id="tLeft" aria-label="links">◀</button><button id="tRight" aria-label="rechts">▶</button></div>
+    <div class="pedals">
+      <button id="tHand" class="pedal hand" aria-label="Handbremse">HAND&shy;BREMSE</button>
+      <button id="tBrake" class="pedal brake" aria-label="Bremse / Rückwärts">BREMSE</button>
+      <button id="tGas" class="pedal gas" aria-label="Gas">GAS</button>
+    </div>
+  </div>
+
+  <div id="start" class="start">
+    <div class="title">NEON HAVEN</div>
+    <div class="subtitle">Open World · Testgelände</div>
+    <div class="bar"><div id="loadBar"></div></div>
+    <div id="loadInfo">Lade …</div>
+    <button id="bGo" class="go" disabled>LOS GEHT'S</button>
+    <div class="help">
+      <b>Tastatur:</b> W/↑ Gas · S/↓ Bremse (im Stand halten = rückwärts) · A/D lenken · Leertaste Handbremse ·
+      C Kamera · B nach hinten schauen · L Licht · Q/E Blinker · R zurücksetzen · Esc Menü · Maus ziehen = umschauen<br>
+      <b>Xbox-Controller:</b> RT Gas · LT Bremse/rückwärts · linker Stick lenken · A Handbremse · Y Kamera ·
+      B nach hinten · X Licht · LB/RB Blinker · rechter Stick umschauen · Ansicht-Taste zurücksetzen · Menü-Taste Pause<br>
+      <b>Touch:</b> linke Hälfte wischen = lenken (im Menü auch Neigen oder Tasten) · rechts Gas, Bremse, Handbremse
+    </div>
+  </div>
+
+  <dialog id="menu" class="menu">
+    <div class="head"><h2>MENÜ</h2><button id="bClose" class="opt primary">Weiterfahren</button></div>
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tab="drive">Fahren</button>
+      <button class="tab" data-tab="car">Auto</button>
+      <button class="tab" data-tab="world">Welt</button>
+      <button class="tab" data-tab="gfx">Grafik &amp; Ton</button>
+      <button class="tab" data-tab="help">Steuerung</button>
+    </div>
+    <div class="body" id="menuBody"></div>
+  </dialog>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>
