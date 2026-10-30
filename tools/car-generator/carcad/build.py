@@ -66,7 +66,12 @@ def skin_material_fn(spec, body, lod):
         if lod == 2 and body.j_cut_r <= j < body.j_cut_l and zo0 < c[2] < zo1:
             return "InteriorPlastic"    # geschlossene Kabine in großer Entfernung
         if tt:
-            y_line = tt["y"] if "y" in tt else body.params_at(c[2])["yt"] - tt.get("below_belt", 0.08)
+            pz = body.params_at(c[2])
+            if tt.get("crease"):
+                # Trennlinie genau auf der Charakterlinie (Knick der Flanke)
+                y_line = pz["yt"] - body.sec["hi"] * (pz["yt"] - pz["yb"]) + tt.get("offset", 0.0)
+            else:
+                y_line = tt["y"] if "y" in tt else pz["yt"] - tt.get("below_belt", 0.08)
             if c[1] > y_line:
                 return "Paint2"
         return "Paint"
@@ -81,7 +86,7 @@ def build_lod(spec, lod):
     skin = body.build_skin(mat_fn=mat_fn, open_cabin=(lod < 2))
     arches = body.wheel_arches(lip_mat=sp.get("arch_mat", "Paint"), liner_mat="Liner", flare=sp.get("flare"))
     glass = body.glasshouse(glass="Glass", roof=sp.get("roof_mat", "Paint2"), pillar=sp.get("pillar_mat", "Paint2"),
-                            bpillar=sp.get("bpillar_mat", "BlackGloss"), seal="Seal",
+                            bpillar=sp.get("bpillar_mat", "BlackGloss"), seal=sp.get("seal_mat", "Seal"),
                             belt="BeltTrim" if lod < 2 else None, glass_roof=sp.get("glass_roof_mat"))
     ctx = Ctx(sp, lod, body, Raycaster([skin]))
     if "details" in sp:

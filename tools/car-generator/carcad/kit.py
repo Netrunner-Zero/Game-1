@@ -781,3 +781,43 @@ def raised_vent_local(w, l, n, lod=0, frame_mat="BlackGloss", slat_mat="BlackGlo
             v = -l * 0.47 + l * 0.94 * (i + 0.5) / n
             seg_box(p, (0, v, 0.0065), (w * 0.9, l * 0.94 / n * 0.92, 0.004), slat_mat, rot=(math.radians(angle), 0, 0))
     return p
+
+
+def side_strip(ctx, y_fn, z0, z1, width=0.02, mat="Chrome", part="Trim", offset=0.002, n=None):
+    """Leiste/Zierlinie auf beiden Flanken, folgt der Oberfläche. y_fn: Höhe (Zahl oder Funktion von z)."""
+    b = ctx.b
+    p = ctx.part(part)
+    n = n or max(8, int(abs(z1 - z0) / 0.04))
+    zs = np.linspace(z0, z1, n)
+    for side in (1, -1):
+        samples = []
+        for z in zs:
+            y = y_fn(z) if callable(y_fn) else y_fn
+            samples.append((z, b.j_at_height(z, y, side)))
+        b.strip(p, samples, width, mat, offset=offset)
+
+
+def hood_ornament(part, base, lod=0, mat="Chrome"):
+    """Stehende Kühlerfigur: gebogene, nach hinten geschwungene Klinge auf einem runden Sockel."""
+    c = np.asarray(base, dtype=float)
+    segs = 20 if lod == 0 else 8
+    part.lathe([(0.0, 0.026), (0.004, 0.026), (0.012, 0.02), (0.016, 0.012), (0.016, 0.0)], segs, mat,
+               center=tuple(c), axis="y", inside=(0.006, 0.01))
+    n_s = 14 if lod == 0 else 6
+    secs = []
+    for i in range(n_s + 1):
+        t = i / n_s
+        P = c + np.array([0.0, 0.014 + 0.095 * t, -0.075 * t ** 1.7])
+        T = np.array([0.0, 0.095, -0.075 * 1.7 * max(t, 1e-3) ** 0.7])
+        T = T / np.linalg.norm(T)
+        N = np.array([0.0, -T[2], T[1]])                 # in der y-z-Ebene senkrecht zur Bahn
+        if N[2] > 0:
+            N = -N                                        # Vorderkante zeigt nach vorne (+z) -> N nach hinten
+        a = 0.0045 * (1 - t) + 0.0012
+        bb = 0.024 * (1 - t) ** 0.8 + 0.002
+        sec = []
+        for k in range(12):
+            th = 2 * math.pi * k / 12
+            sec.append(P + np.array([a * math.cos(th), 0.0, 0.0]) + N * (bb * math.sin(th) - bb * 0.35))
+        secs.append(sec)
+    part.loft(secs, lambda k, j: mat, caps=(mat, mat), smooth=True)

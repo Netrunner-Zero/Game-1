@@ -558,8 +558,11 @@ class Cockpit:
             p.lathe([(ys + 0.001, 0.0), (ys + 0.001, 0.05), (ys + 0.03, 0.02)], 16, "Rubber",
                     center=(0, 0, zs), axis="y", inside=(ys + 0.01, 0.0))
         elif st == "dial":
-            p.lathe([(ys, 0.0), (ys, 0.035), (ys + 0.025, 0.033), (ys + 0.026, 0.0)], 24, "Aluminum",
+            p.lathe([(ys, 0.0), (ys, 0.035), (ys + 0.025, 0.033), (ys + 0.026, 0.0)], 24, C.get("knob", "Aluminum"),
                     center=(0, 0, zs), axis="y", inside=(ys + 0.01, 0.01))
+            if C.get("knob_ring"):
+                p.lathe([(ys + 0.001, 0.036), (ys + 0.001, 0.041), (ys + 0.008, 0.041), (ys + 0.008, 0.036)], 24,
+                        C["knob_ring"], center=(0, 0, zs), axis="y", inside=(ys + 0.004, 0.038))
         elif st == "buttons":
             for k, x in enumerate((-0.05, 0.0, 0.05)):
                 p.rbox((x, ys + 0.006, zs), (0.035, 0.012, 0.025), 0.006, "ButtonGlow" if k == 1 else "DisplayGlass", segs=2)
@@ -775,8 +778,16 @@ class Cockpit:
                                                      back_h=rear.get("back_h", 0.56), rear=True,
                                                      headrest=rear.get("headrest", True))
                 if rear.get("console"):
-                    self.part.rbox((0, self.floor + 0.3, zr_ + 0.05), (0.2, 0.18, 0.5), 0.03, "Seat", segs=3)
-                    self.part.rbox((0, self.floor + 0.395, zr_ + 0.05), (0.12, 0.012, 0.3), 0.004, "InteriorTrim", segs=2)
+                    # Fond-Mittelkonsole: Leder, Holzdeckel mit Chromkante, Flaschenhalter
+                    fl = self.floor
+                    self.part.rbox((0, fl + 0.3, zr_ + 0.05), (0.2, 0.18, 0.5), 0.03, "Seat", segs=3)
+                    self.part.rbox((0, fl + 0.392, zr_ + 0.05), (0.19, 0.012, 0.48), 0.006, "InteriorTrim", segs=2)
+                    for sx_ in (1, -1):
+                        self.part.box((sx_ * 0.096, fl + 0.392, zr_ + 0.05), (0.004, 0.014, 0.47), "Chrome")
+                    cz_ = zr_ + 0.12
+                    self.part.lathe([(fl + 0.398, 0.044), (fl + 0.398, 0.050), (fl + 0.428, 0.050), (fl + 0.428, 0.044)], 24,
+                                    "Chrome", center=(0, 0, cz_), axis="y", inside=(fl + 0.41, 0.047))
+                    self.anchors["rear_console"] = (0.0, fl + 0.399, cz_)
         # Bildschirme an den Rückseiten der Vordersitze
         if I.get("rear_screens"):
             for name in ("driver", "passenger"):
