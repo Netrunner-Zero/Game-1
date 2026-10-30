@@ -30,6 +30,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   map: 'neon_haven',        // Karte: 'neon_haven' (Stadt) | 'testgelaende'
   weather: 'clear',         // Wetter: 'clear' | 'cloudy' | 'rain' | 'storm'
   weatherAuto: false,       // Wetter wechselt von selbst
+  traffic: 'normal',        // Verkehr: 'off' | 'low' | 'normal' | 'high'
 });
 
 function load() {
@@ -57,6 +58,7 @@ export class Settings extends EventTarget {
     if (!['swipe', 'tilt', 'buttons'].includes(this.values.touchSteer)) this.values.touchSteer = 'swipe';
     if (!['neon_haven', 'testgelaende'].includes(this.values.map)) this.values.map = 'neon_haven';
     if (!['clear', 'cloudy', 'rain', 'storm'].includes(this.values.weather)) this.values.weather = 'clear';
+    if (!['off', 'low', 'normal', 'high'].includes(this.values.traffic)) this.values.traffic = 'normal';
     const ss = Number(this.values.steerSens);
     this.values.steerSens = Number.isFinite(ss) ? Math.min(1.5, Math.max(0.5, ss)) : 1;
     this.values.volume = clamp01(Number(this.values.volume), DEFAULT_SETTINGS.volume);

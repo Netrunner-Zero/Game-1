@@ -1,0 +1,160 @@
+{
+ "version": 1,
+ "cells": [
+  0.04,
+  0.095
+ ],
+ "cars": [
+  {
+   "id": "vektra_gt",
+   "lods": [
+    {
+     "vertices": 3319,
+     "triangles": 5227,
+     "position": 0,
+     "normal": 39828,
+     "color": 49788,
+     "flags": 59748,
+     "index": 63068,
+     "index32": false
+    },
+    {
+     "vertices": 2006,
+     "triangles": 3151,
+     "position": 94432,
+     "normal": 118504,
+     "color": 124524,
+     "flags": 130544,
+     "index": 132552,
+     "index32": false
+    }
+   ]
+  },
+  {
+   "id": "brawler_77",
+   "lods": [
+    {
+     "vertices": 3451,
+     "triangles": 5618,
+     "position": 151460,
+     "normal": 192872,
+     "color": 203228,
+     "flags": 213584,
+     "index": 217036,
+     "index32": false
+    },
+    {
+     "vertices": 1795,
+     "triangles": 2906,
+     "position": 250744,
+     "normal": 272284,
+     "color": 277672,
+     "flags": 283060,
+     "index": 284856,
+     "index32": false
+    }
+   ]
+  },
+  {
+   "id": "ion_spectre",
+   "lods": [
+    {
+     "vertices": 2903,
+     "triangles": 4495,
+     "position": 302292,
+     "normal": 337128,
+     "color": 345840,
+     "flags": 354552,
+     "index": 357456,
+     "index32": false
+    },
+    {
+     "vertices": 1657,
+     "triangles": 2397,
+     "position": 384428,
+     "normal": 404312,
+     "color": 409284,
+     "flags": 414256,
+     "index": 415916,
+     "index32": false
+    }
+   ]
+  },
+  {
+   "id": "rhino_x",
+   "lods": [
+    {
+     "vertices": 3499,
+     "triangles": 5659,
+     "position": 430300,
+     "normal": 472288,
+     "color": 482788,
+     "flags": 493288,
+     "index": 496788,
+     "index32": false
+    },
+    {
+     "vertices": 2224,
+     "triangles": 3495,
+     "position": 530744,
+     "normal": 557432,
+     "color": 564104,
+     "flags": 570776,
+     "index": 573000,
+     "index32": false
+    }
+   ]
+  },
+  {
+   "id": "pulse",
+   "lods": [
+    {
+     "vertices": 3196,
+     "triangles": 5121,
+     "position": 593972,
+     "normal": 632324,
+     "color": 641912,
+     "flags": 651500,
+     "index": 654696,
+     "index32": false
+    },
+    {
+     "vertices": 1654,
+     "triangles": 2463,
+     "position": 685424,
+     "normal": 705272,
+     "color": 710236,
+     "flags": 715200,
+     "index": 716856,
+     "index32": false
+    }
+   ]
+  },
+  {
+   "id": "aurelion_s",
+   "lods": [
+    {
+     "vertices": 3329,
+     "triangles": 5433,
+     "position": 731636,
+     "normal": 771584,
+     "color": 781572,
+     "flags": 791560,
+     "index": 794892,
+     "index32": false
+    },
+    {
+     "vertices": 2036,
+     "triangles": 3168,
+     "position": 827492,
+     "normal": 851924,
+     "color": 858032,
+     "flags": 864140,
+     "index": 866176,
+     "index32": false
+    }
+   ]
+  }
+ ],
+ "bytes": 885184
+}

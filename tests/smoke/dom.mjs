@@ -105,8 +105,10 @@ export function installDom(htmlPath, baseDir) {
     fetch: async (url) => {
       const p = path.resolve(baseDir, url);
       try {
-        const txt = readFileSync(p, 'utf8');
-        return { ok: true, status: 200, json: async () => JSON.parse(txt), text: async () => txt };
+        const buf = readFileSync(p);
+        const txt = () => buf.toString('utf8');
+        return { ok: true, status: 200, json: async () => JSON.parse(txt()), text: async () => txt(),
+          arrayBuffer: async () => buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) };
       } catch (e) { return { ok: false, status: 404, json: async () => ({}) }; }
     },
     __smokeResolve: (url) => path.resolve(baseDir, url),

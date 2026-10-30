@@ -130,6 +130,14 @@ G.rig.setMode('chase'); await env.frames(5);
   const along = (c.x - G.phys.pos.x) * Math.sin(G.phys.yaw) + (c.z - G.phys.pos.z) * Math.cos(G.phys.yaw);
   check(along < -3, `Stadt: Verfolgerkamera hinter dem Auto (${along.toFixed(2)} m), Masten ziehen sie nicht heran`);
 }
+// Verkehr in der Stadt
+{
+  await env.frames(60 * 5);
+  const T = G.traffic;
+  check(T && T.cars.length > 10, `Verkehr: ${T ? T.cars.length : 0} KI-Autos`);
+  const moving = T ? T.cars.filter((c) => c.v > 2).length : 0;
+  check(moving > 3, `davon in Bewegung: ${moving}`);
+}
 // Ampeln schalten
 {
   const s = G.world.signal;

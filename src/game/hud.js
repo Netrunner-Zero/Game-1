@@ -41,7 +41,7 @@ export class Hud {
     img.onload = () => { if (this.mm && this.mm.img === img) { this.mm.ok = true; this.mmCanvas.classList.remove('hidden'); } };
   }
 
-  _drawMinimap(p) {
+  _drawMinimap(p, dots) {
     const mm = this.mm;
     if (!mm || !mm.ok) return;
     const c = this.mmCtx, W = this.mmCanvas.width, R = W / 2 - 3;
@@ -59,6 +59,14 @@ export class Hud {
     c.scale(this._mmZoom, this._mmZoom);
     c.translate(-u, -v);
     c.drawImage(mm.img, 0, 0);
+    // andere Autos als Punkte
+    if (dots && dots.length) {
+      const r = 3.2 / this._mmZoom;
+      for (const d of dots) {
+        c.fillStyle = d.crashed ? '#ffb020' : 'rgba(235,240,255,0.85)';
+        c.beginPath(); c.arc((mm.info.span / 2 - d.x) * s, (mm.info.span / 2 - d.z) * s, r, 0, Math.PI * 2); c.fill();
+      }
+    }
     c.restore();
     // Rand, Spieler-Pfeil, Norden
     c.lineWidth = 3; c.strokeStyle = 'rgba(255,255,255,0.18)';
@@ -80,7 +88,7 @@ export class Hud {
     this._toastT = seconds;
   }
 
-  update(dt, p) {
+  update(dt, p, dots) {
     if (this._toastT > 0) {
       this._toastT -= dt;
       if (this._toastT <= 0) this.toastEl.classList.remove('on');
@@ -95,7 +103,7 @@ export class Hud {
     const rpm = p.electric ? Math.min(1, Math.abs(p.speed) / p.vLimit) : Math.min(1.02, p.rpm / (p.redline * 1.08));
     if (Math.abs(rpm - this._last.rpm) > 0.004) { this._drawRpm(rpm, p); this._last.rpm = rpm; }
     this._mmT += dt;
-    if (this._mmT > 1 / 30) { this._mmT = 0; this._drawMinimap(p); }
+    if (this._mmT > 1 / 30) { this._mmT = 0; this._drawMinimap(p, dots); }
   }
 
   _drawRpm(f, p) {

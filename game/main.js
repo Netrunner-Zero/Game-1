@@ -18,6 +18,9 @@ import { SkySystem } from '../src/game/sky.js';
 import { CarAudio } from '../src/game/audio.js';
 import { Weather, WEATHERS } from '../src/game/weather.js';
 import { StreetLights } from '../src/game/nightlights.js';
+import { Traffic } from '../src/traffic/Traffic.js';
+import { TrafficView } from '../src/traffic/TrafficView.js';
+import { loadProxyData } from '../src/traffic/proxies.js';
 
 const $ = (id) => document.getElementById(id);
 const TUNE_KEY = 'neonHaven.tuning.v1';
@@ -53,6 +56,11 @@ const weather = new Weather(scene, { drops: { low: 2500, medium: 5000, high: 800
 weather.set(settings.get('weather'));
 weather.snap();
 let streetLights = null;
+let traffic = null;
+let trafficView = null;
+let proxyGeos = null;
+const TRAFFIC = { off: 0, low: 0.5, normal: 1, high: 1.5 };
+const TRAFFIC_LABEL = { off: 'Aus', low: 'Wenig', normal: 'Normal', high: 'Viel' };
 let weatherTimer = 200 + Math.random() * 200;
 
 let world = null;
@@ -167,6 +175,37 @@ async function spawnCar(id, at, onProgress) {
 
 const MAPS = { neon_haven: 'Neon Haven', testgelaende: 'Testgelände' };
 
+// Stadtverkehr (nur Karten mit Straßennetz)
+async function makeTraffic() {
+  if (traffic) traffic.clear();
+  if (trafficView) { trafficView.dispose(); trafficView = null; }
+  traffic = null;
+  const base = { low: 16, medium: 26, high: 36 }[settings.resolvedQuality()];
+  const n = Math.round(base * (TRAFFIC[settings.get('traffic')] || 0));
+  if (!world || !world.meta.roads || n <= 0) return;
+  try {
+    if (!proxyGeos) proxyGeos = await loadProxyData('../models/');
+  } catch (e) {
+    console.warn('Verkehr nicht verfügbar:', e);
+    return;
+  }
+  traffic = new Traffic(world.meta, lib.byId, { count: n, seed: (Math.random() * 1e9) | 0,
+    signalState: (g, o) => world.signalState(g, o) });
+  traffic.onAdd = (c) => {
+    c.entry = collisions.add(c.body, carShape(c.meta, 0));
+    c.entry.traffic = c;
+  };
+  traffic.onRemove = (c) => { if (c.entry) collisions.remove(c.entry); };
+  traffic.onHonk = (c) => audio.honk(c.dist, 0.8 + (c.id.length % 5) * 0.1);
+  trafficView = new TrafficView(scene, proxyGeos, Math.ceil(n * 1.2) + 4);
+  const p = phys ? phys.pos : world.spawns[0];
+  traffic.fill(p.x, p.z);
+}
+
+function trafficPlayer() {
+  return { pos: phys.pos, vel: phys.vel, length: car.meta.dimensions.length, width: car.meta.dimensions.width };
+}
+
 // echte Lichter an den nächsten Laternen: Anzahl je Qualität fest (Niedrig 0, Mittel 4, Hoch 8)
 function makeStreetLights() {
   if (streetLights) streetLights.dispose();
@@ -188,6 +227,7 @@ async function loadMap(id, onProgress) {
   rig.world = world.statics;
   hud.setMinimap(world.meta.minimap ? '../world/' + world.meta.minimap.file : null, world.meta.minimap || null);
   makeStreetLights();
+  await makeTraffic();
   zoneShown = '';
   if (phys) {
     colEntry = collisions.add(phys, carShape(car.meta, phys.zcg));
@@ -274,7 +314,9 @@ window.addEventListener('pointermove', (e) => {
 window.addEventListener('pointerup', (e) => { if (look && e.pointerId === look.id) look = null; });
 
 // Auslösen von Vibration/Wackeln/Geräusch bei Aufprall
-function onImpact(entry, s) {
+function onImpact(entry, s, x, z, other) {
+  // KI-Auto vom Spieler (oder einer Wand) getroffen -> gerät ins Rutschen
+  if (entry && entry.traffic && (other === colEntry || (other && !other.body))) entry.traffic.hit = Math.max(entry.traffic.hit, s);
   if (!entry || entry !== colEntry) return;
   if (s < 1.2) return;
   rig.addShake(Math.min(0.9, s / 16));
@@ -404,6 +446,8 @@ function buildMenu(tab) {
     r = row(body, 'Tageszeit', `<span id="vTime">${fmtTime(hours)}</span>`);
     range(r, 0, 23.99, 0.05, hours, (v) => { $('vTime').textContent = fmtTime(v); setTime(v); settings.set('timeOfDay', v); });
     check(body, 'Zeit läuft weiter (ein Tag = 24 Minuten)', settings.get('timeFlow'), (v) => settings.set('timeFlow', v));
+    r = row(body, 'Verkehr');
+    opts(r, Object.entries(TRAFFIC_LABEL), settings.get('traffic'), async (v) => { settings.set('traffic', v); await makeTraffic(); });
     r = row(body, 'Wetter');
     opts(r, Object.entries(WEATHERS).map(([k, w]) => [k, w.label]), weather.kind, (v) => { settings.set('weather', v); weather.set(v); });
     check(body, 'Wetter wechselt von selbst', settings.get('weatherAuto'), (v) => settings.set('weatherAuto', v));
@@ -480,12 +524,14 @@ function frame() {
   const inp = input.update(dt, phys.speedKmh);
   if (started && !paused) {
     // Physik und Kollisionen in kleinen Schritten (kein Durchtunneln bei Tempo 300)
+    if (traffic) traffic.update(dt, trafficPlayer());
     const n = Math.max(1, Math.ceil(dt / STEP));
     const h = dt / n;
     for (let i = 0; i < n; i++) {
       phys.step(h, inp, world);
       collisions.step(onImpact);
     }
+    if (traffic) traffic.afterCollisions();
     world.update(dt, [colEntry], phys.pos, onPropHit);
     if (settings.get('timeFlow')) {
       setTime(hours + dt / 60);            // 24 Minuten je Tag
@@ -511,7 +557,8 @@ function frame() {
       if (next !== weather.kind) { weather.set(next); settings.set('weather', next); hud.toast('Wetter: ' + WEATHERS[next].label, 2.2); }
     }
   }
-  hud.update(dt, phys);
+  if (trafficView && traffic) trafficView.update(traffic, camera, sky.nightK, world.groundHeight, world.time);
+  hud.update(dt, phys, traffic ? traffic.cars.map((c) => ({ x: c.x, z: c.z, crashed: c.state === 'crashed' })) : null);
   audio.update(dt, phys, started && !paused ? inp : {});
   const zone = world.zoneAt(phys.pos.x, phys.pos.z) || world.meta.name;
   if (zone !== zoneShown) { zoneShown = zone; $('zone').textContent = zone === world.meta.name ? zone : world.meta.name + ' · ' + zone; }
@@ -589,6 +636,7 @@ document.addEventListener('visibilitychange', () => {
 // Zugriff für die Browser-Konsole und den Rauchtest (tests/smoke)
 window.neonHaven = {
   settings, input, rig, sky, hud, audio, weather,
+  get traffic() { return traffic; },
   get streetLights() { return streetLights; },
   get world() { return world; }, get car() { return car; }, get phys() { return phys; },
   get started() { return started; }, get paused() { return paused; }, get hours() { return hours; },

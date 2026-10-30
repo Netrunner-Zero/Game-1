@@ -2,8 +2,8 @@
 
 Hier entsteht ein 3D-Autospiel in einer futuristischen Stadt (**Neon Haven**). Zurzeit gibt es:
 
-- **das Spiel** (`game/`, in Arbeit): die Stadt Neon Haven und ein Testgelände, echte Fahrphysik, Steuerung per
-  Touch, Tastatur und Xbox-Controller, fünf Kameras, Tageszeit – Regen und Verkehr folgen,
+- **das Spiel** (`game/`): die Stadt Neon Haven mit Verkehr und Ampeln und ein Testgelände, echte Fahrphysik,
+  Steuerung per Touch, Tastatur und Xbox-Controller, fünf Kameras, Tageszeit, Regen und nasse Straßen,
 - **die Fahrzeug-Garage** (`garage/`): sechs detaillierte 3D-Autos zum Ansehen, Tunen und Testen,
 - **Highway Dodge** (`index.html`): das ursprüngliche kleine 2D-Ausweichspiel (siehe unten).
 
@@ -17,7 +17,18 @@ Hier entsteht ein 3D-Autospiel in einer futuristischen Stadt (**Neon Haven**). Z
 Ampeln an jeder Kreuzung (schalten wirklich), Laternen. Viertel: **Downtown** (Glastürme bis ~280 m mit Werbetafeln
 und Neon-Kronen), **Neon-Markt** (Läden, Leuchtreklame), **Wohnviertel**, **Lichtpark**, **Altstadt** und **Hafen**
 (Lagerhallen, Containerlager, Kräne, Kai). Rundherum eine Mauer mit Hochstraße und Skyline, im Süden Wasser.
-Minikarte oben rechts (dreht sich mit, N zeigt nach Norden).
+Minikarte oben rechts (dreht sich mit, N zeigt nach Norden, Punkte = andere Autos).
+
+**Verkehr** (`src/traffic/`): KI-Autos aller sechs Modelle in vielen Lackfarben fahren auf ihren Spuren
+(Rechtsverkehr), halten an roten Ampeln, halten Abstand (Intelligent Driver Model), biegen ab (mit Blinker), lassen
+beim Linksabbiegen den Gegenverkehr durch, bremsen für dich – und hupen, wenn du im Weg stehst. Wer ein Auto rammt,
+bringt es ins Rutschen; danach steht es mit Warnblinker. Nachts leuchten Scheinwerfer und Rücklichter, die
+Scheinwerfer werfen Licht auf die Straße. Dichte im Menü: Aus, Wenig, Normal, Viel. Gezeichnet werden vereinfachte
+Modelle (`models/traffic.bin`, erzeugt mit `python3 tools/car-generator/traffic_proxies.py`) als InstancedMesh.
+
+**Wetter und Nacht:** Klar, Bewölkt, Regen, Starkregen (oder automatisch wechselnd). Bei Regen werden Straßen und
+Gehwege nass, dunkler und spiegelnd, die Reifen haben weniger Grip. Nachts leuchten Laternen (Lichtkegel auf allen
+Straßen, echte Lichter an den nächsten Laternen), Fenster, Läden, Leuchtreklame und Ampeln.
 
 **Testgelände** (Karte `testgelaende`, im Menü unter „Welt“): 1,15 km lange Gerade (Bremspunkte bei 300/200/100 m),
 Kreisbahn, Slalom und Ausweichtest (Pylonen fliegen weg), Tisch-Sprung, Kicker, Rüttel- und Wellenstrecke,
@@ -50,6 +61,7 @@ node tests/physics.test.mjs      # 0–100, Vmax, Bremsweg, Querbeschleunigung, 
 node tests/collision.test.mjs    # Mauer mit 300 km/h, Wand streifen, Pfosten, Auto gegen Auto
 node tests/world.test.mjs        # Testgelände abfahren: Gerade, Sprung, Wellen, Crashwand, Kreisbahn
 node tests/city.test.mjs         # Stadt: Startplätze, Bordsteine, Ampelzyklus, Boulevard-Fahrt, Häuser
+node tests/traffic.test.mjs      # Verkehr: Spurgraph, 3 Minuten Fahrt (keine Rotlichtfahrten), Abstand, Hupen, Rammen
 node tests/smoke/run.mjs         # ganzes Spiel mit Ersatz-three.js: Laden, Fahren, Kameras, Menü, Autowechsel, Nacht, Touch
 ```
 

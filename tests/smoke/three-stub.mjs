@@ -201,11 +201,11 @@ export class Group extends Object3D {}
 export class Scene extends Object3D { constructor() { super(); this.background = null; this.environment = null; this.fog = null; } }
 export class Mesh extends Object3D { constructor(geometry, material) { super(); this.isMesh = true; this.geometry = geometry; this.material = material; } }
 export class InstancedMesh extends Mesh {
-  constructor(g, m, count) { super(g, m); this.count = count; this.instanceMatrix = { needsUpdate: false, setUsage() {} }; this._mats = []; }
-  setMatrixAt(i, m) { if (i >= this.count) throw new Error('Instanz außerhalb'); this._mats[i] = m.elements.slice(); }
+  constructor(g, m, count) { super(g, m); this.count = count; this.capacity = count; this.instanceMatrix = { needsUpdate: false, setUsage() {} }; this._mats = []; }
+  setMatrixAt(i, m) { if (i >= this.capacity) throw new Error('Instanz außerhalb'); this._mats[i] = m.elements.slice(); }
   setColorAt(i, c) {
-    if (i >= this.count) throw new Error('Instanz außerhalb');
-    if (!this.instanceColor) this.instanceColor = { needsUpdate: false, array: new Float32Array(this.count * 3) };
+    if (i >= this.capacity) throw new Error('Instanz außerhalb');
+    if (!this.instanceColor) this.instanceColor = { needsUpdate: false, array: new Float32Array(this.capacity * 3) };
     this.instanceColor.array.set([c.r, c.g, c.b], i * 3);
   }
 }
@@ -217,7 +217,7 @@ export class PerspectiveCamera extends Camera {
 
 export class BufferGeometry {
   constructor() { this.attributes = {}; this.index = { count: 300 }; }
-  clone() { return new this.constructor(); }
+  clone() { const g = new this.constructor(); g.attributes = { ...this.attributes }; g.index = this.index; return g; }
   applyMatrix4() { return this; }
   dispose() {}
   setAttribute(n, a) { this.attributes[n] = a; return this; }
@@ -289,3 +289,8 @@ export class BufferAttribute { constructor(a, n) { this.array = a; this.itemSize
 export class LineSegments extends Object3D { constructor(g, m) { super(); this.geometry = g; this.material = m; } }
 export class PlaneGeometry extends BufferGeometry { rotateX() { return this; } }
 BufferGeometry.prototype.setDrawRange = function (a, b) { this.drawRange = { start: a, count: b }; };
+BufferAttribute.prototype.setXYZ = function (i, x, y, z) { this.array[i * 3] = x; this.array[i * 3 + 1] = y; this.array[i * 3 + 2] = z; return this; };
+export class InstancedBufferAttribute extends BufferAttribute {}
+BufferGeometry.prototype.setIndex = function (a) { this.index = a; return this; };
+BufferGeometry.prototype.computeBoundingSphere = function () {};
+export const UnsignedByteType = 1009;

@@ -198,19 +198,24 @@ export class CarAudio {
     src.stop(t + 0.8);
   }
 
+  /** Hupe eines anderen Autos (tiefer/höher je Auto, leiser mit Abstand). */
+  honk(dist = 10, pitch = 1) {
+    this.horn(0.35 + Math.random() * 0.4, Math.max(0.15, 1 - dist / 40), pitch);
+  }
+
   /** Hupe (zwei Töne, kurz). */
-  horn(seconds = 0.45) {
+  horn(seconds = 0.45, vol = 1, pitch = 1) {
     const ctx = this.ctx;
     if (!ctx || ctx.state !== 'running') return;
     const t = ctx.currentTime;
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.16, t + 0.02);
-    g.gain.setValueAtTime(0.16, t + seconds);
+    g.gain.exponentialRampToValueAtTime(0.16 * vol, t + 0.02);
+    g.gain.setValueAtTime(0.16 * vol, t + seconds);
     g.gain.exponentialRampToValueAtTime(0.0001, t + seconds + 0.08);
     const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2200;
     g.connect(lp).connect(this.master);
-    for (const f of [415, 523]) {
+    for (const f of [415 * pitch, 523 * pitch]) {
       const o = ctx.createOscillator(); o.type = 'square'; o.frequency.value = f;
       o.connect(g); o.start(t); o.stop(t + seconds + 0.1);
     }
