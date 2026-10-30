@@ -554,7 +554,8 @@ def decal_local(w, h, mat, wv=0.0015, uv=(0, 0, 1, 1), max_len=0.025):
 
 def plate_holder_local(lod=0):
     p = Part("plate")
-    p.rbox((0, 0, -0.004), (0.54, 0.13, 0.012), 0.01, "Trim", segs=2)
+    if lod < 2:                     # Halter nur in der Nähe (spart in der Ferne einen Draw Call je Schild)
+        p.rbox((0, 0, -0.004), (0.54, 0.13, 0.012), 0.01, "Trim", segs=2)
     p.tex_quad((0, 0, 0.0035), (1, 0, 0), (0, 1, 0), 0.52, 0.11, "Plate")
     if lod == 0:
         for u in (-0.2, 0.2):

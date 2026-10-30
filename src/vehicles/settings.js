@@ -36,8 +36,10 @@ export class Settings extends EventTarget {
     super();
     this.values = { ...DEFAULT_SETTINGS, ...load() };
     // Werte absichern
-    this.values.interiorLight = clamp01(Number(this.values.interiorLight));
-    this.values.displayBrightness = clamp01(Number(this.values.displayBrightness));
+    this.values.interiorLight = clamp01(Number(this.values.interiorLight), DEFAULT_SETTINGS.interiorLight);
+    this.values.displayBrightness = clamp01(Number(this.values.displayBrightness), DEFAULT_SETTINGS.displayBrightness);
+    const ex = Number(this.values.exposure);
+    this.values.exposure = Number.isFinite(ex) ? Math.min(1.6, Math.max(0.5, ex)) : DEFAULT_SETTINGS.exposure;
     if (!['auto', 'low', 'medium', 'high'].includes(this.values.quality)) this.values.quality = 'auto';
   }
 
@@ -79,8 +81,8 @@ export class Settings extends EventTarget {
   }
 }
 
-function clamp01(v) {
-  return Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0;
+function clamp01(v, fallback = 0) {
+  return Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : fallback;
 }
 
 // Qualitätsstufen: Detailgrad, Schatten, Reflexionen

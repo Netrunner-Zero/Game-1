@@ -296,6 +296,7 @@
     ]
    },
    "maxLoweringCm": 3,
+   "defaultTuning": {},
    "rims": [
     "Y-Speiche",
     "Kreuzspeiche",
@@ -314,9 +315,9 @@
    "triangles": {
     "L0": 115522,
     "L1": 23468,
-    "L2": 14660
+    "L2": 14420
    },
-   "fileBytes": 6248576
+   "fileBytes": 6434540
   },
   {
    "id": "brawler_77",
@@ -609,6 +610,7 @@
     ]
    },
    "maxLoweringCm": 5,
+   "defaultTuning": {},
    "rims": [
     "Klassik 5-Speiche",
     "Kreuzspeiche",
@@ -627,9 +629,9 @@
    "triangles": {
     "L0": 115031,
     "L1": 20224,
-    "L2": 10458
+    "L2": 10214
    },
-   "fileBytes": 5827884
+   "fileBytes": 6031636
   },
   {
    "id": "ion_spectre",
@@ -843,6 +845,7 @@
    },
    "exhaustOutlets": {},
    "maxLoweringCm": 4,
+   "defaultTuning": {},
    "rims": [
     "Aero-Turbine",
     "Vielspeiche",
@@ -861,9 +864,9 @@
    "triangles": {
     "L0": 106301,
     "L1": 20864,
-    "L2": 12100
+    "L2": 11880
    },
-   "fileBytes": 5700908
+   "fileBytes": 5899284
   },
   {
    "id": "rhino_x",
@@ -1123,6 +1126,7 @@
     ]
    },
    "maxLoweringCm": 6,
+   "defaultTuning": {},
    "rims": [
     "Beadlock",
     "Gelände 5",
@@ -1141,9 +1145,9 @@
    "triangles": {
     "L0": 129080,
     "L1": 24155,
-    "L2": 12459
+    "L2": 12127
    },
-   "fileBytes": 6685328
+   "fileBytes": 6869020
   },
   {
    "id": "pulse",
@@ -1481,9 +1485,9 @@
    "triangles": {
     "L0": 116770,
     "L1": 20278,
-    "L2": 12124
+    "L2": 11892
    },
-   "fileBytes": 5995880
+   "fileBytes": 6192108
   },
   {
    "id": "aurelion_s",
@@ -1812,9 +1816,9 @@
    "triangles": {
     "L0": 120109,
     "L1": 18678,
-    "L2": 11244
+    "L2": 10968
    },
-   "fileBytes": 5889188
+   "fileBytes": 6101144
   }
  ]
 }

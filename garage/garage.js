@@ -329,10 +329,12 @@ function buildTab(tab) {
     g = group('Lackart');
     options(g, Object.entries(FINISHES).map(([k, f]) => [k, f.label]), t.finish, (v) => tune({ finish: v }));
     body.appendChild(g);
-    g = group('Dach / Zweifarbig');
-    swatches(g, ['#0c0d10', '#e9edf3', '#9aa3ad', '#c8102e', '#1b2a3a', '#c9a45c', '#1f6fff'], t.roofColor,
-      (c) => tune({ roofColor: c }), true);
-    body.appendChild(g);
+    if (car.mat.Paint2) {          // nicht jedes Auto hat ein lackiertes Dach (Ion: Glaskanzel)
+      g = group('Dach / Zweifarbig');
+      swatches(g, ['#0c0d10', '#e9edf3', '#9aa3ad', '#c8102e', '#1b2a3a', '#c9a45c', '#1f6fff', '#c7c1b4'], t.roofColor,
+        (c) => tune({ roofColor: c }), true);
+      body.appendChild(g);
+    }
     g = group('Folierung');
     options(g, [[0, 'Ohne'], ...(m.liveries || []).map((l, i) => [i + 1, l])], t.livery, (v) => tune({ livery: v }));
     swatches(g, ['#f2f2f2', '#0c0d10', '#ffcf00', '#00e5ff', '#ff2bd6', '#c8102e', '#18c29c', '#ff5a1f'], t.liveryColor,
@@ -376,8 +378,8 @@ function buildTab(tab) {
     options(g, (T.cage || [{ name: 'Kein Käfig' }, { name: 'Halbkäfig' }, { name: 'Vollkäfig' }]).map((e, i) => [i, e.name]),
       t.cage, (v) => tune({ cage: v }));
     body.appendChild(g);
-    body.appendChild(el('p', 'hint', 'Motor-Stufen sind am Auto sichtbar (z. B. unter der Heckscheibe, Hutzen, Turbos). ' +
-      'Die Fahrwerte nutzt später die offene Spielwelt.'));
+    body.appendChild(el('p', 'hint', 'Motor-Stufen sind am Auto sichtbar (z. B. Hutzen, Turbos, Schnorchel, ' +
+      'Zusatzscheinwerfer, Carbon-Teile). Die Fahrwerte nutzt später die offene Spielwelt.'));
   } else if (tab === 'interior') {
     let g = group('Ambiente-Farbe');
     swatches(g, AMBIENT, t.ambient, (c) => tune({ ambient: c }), true);
@@ -398,6 +400,14 @@ function buildTab(tab) {
     options(g, [['orbit', 'Außen'], ['cockpit', 'Cockpit'], ['hood', 'Motorhaube']], camMode, (v) => setCamMode(v));
     body.appendChild(g);
   }
+  // Werkszustand: alles Tuning dieses Autos zurück auf Auslieferung
+  const resetBtn = el('button', 'chip reset', 'Werkszustand');
+  resetBtn.type = 'button';
+  resetBtn.onclick = () => {
+    tune(defaultTuning(m));
+    buildTab(currentTab);
+  };
+  body.appendChild(resetBtn);
 }
 
 document.querySelectorAll('.tab').forEach((b) => (b.onclick = () => buildTab(b.dataset.tab)));
@@ -550,6 +560,8 @@ async function perfTest() {
     c.applyTuning(car.tuning);
     c.setInteriorLight(settings.get('interiorLight'));
     c.setDisplayBrightness(settings.get('displayBrightness'));
+    c.setNight(night);
+    c.setLights(car.state.lights);
     c.object.position.set(x, 0, z);
     c.object.rotation.y = Math.random() * Math.PI * 2;
     scene.add(c.object);
@@ -558,7 +570,8 @@ async function perfTest() {
   const wasMode = camMode, wasDist = controls.maxDistance;
   setCamMode('orbit');
   controls.maxDistance = 60;
-  perfRun = { t0: performance.now(), frames: 0, worst: 0, extra, last: performance.now(), wasMode, wasDist };
+  perfRun = { t0: performance.now(), frames: 0, worst: 0, extra, last: performance.now(), wasMode, wasDist,
+    maxTris: 0, maxCalls: 0 };
 }
 function perfTick(now) {
   if (!perfRun) return;
@@ -572,7 +585,7 @@ function perfTick(now) {
   controls.target.set(0, 0.6, 8);
   if (t > 8) {
     const fps = (r.frames / t);
-    const tris = renderer.info.render.triangles;
+    const tris = r.maxTris;
     for (const c of r.extra) c.dispose();
     controls.maxDistance = r.wasDist;
     controls.target.set(0, 0.55, 0);
@@ -580,7 +593,8 @@ function perfTick(now) {
     setCamMode(r.wasMode);
     perfRun = null;
     const msg = `Ergebnis: Ø ${fps.toFixed(0)} FPS, langsamstes Bild ${(r.worst).toFixed(0)} ms, ` +
-      `12 Autos, ${Math.round(tris / 1000)} k Dreiecke im Bild (Qualität ${settings.resolvedQuality()}).`;
+      `12 Autos, bis ${Math.round(tris / 1000)} k Dreiecke und ${r.maxCalls} Draw Calls je Bild ` +
+      `(Qualität ${settings.resolvedQuality()}).`;
     $('perfResult').textContent = msg;
     $('settings').showModal();
   }
@@ -608,6 +622,10 @@ function frame() {
   const useBloom = settings.get('bloom') && Q.bloom;
   if (useBloom) composer.render(dt);
   else renderer.render(scene, camera);
+  if (perfRun) {                       // Werte dieses Bildes merken (info wird zu Beginn jedes Bildes zurückgesetzt)
+    perfRun.maxTris = Math.max(perfRun.maxTris, renderer.info.render.triangles);
+    perfRun.maxCalls = Math.max(perfRun.maxCalls, renderer.info.render.calls);
+  }
   // Leistungsanzeige
   fpsAcc += dt; fpsFrames++;
   if (fpsAcc > 0.5) {

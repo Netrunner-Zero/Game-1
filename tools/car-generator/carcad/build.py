@@ -39,8 +39,32 @@ from .materials import library
 from .textures import embed
 
 LODS = (0, 1, 2)
+# Weniger Materialien (= weniger Draw Calls) in der Ferne: dunkle Kleinteile teilen sich ein Material.
+# Lichtmaterialien bleiben getrennt, damit Scheinwerfer/Rückleuchten auch weit weg schalten und leuchten.
+LOD_MAT_MAP = {
+    1: {"Mesh": "Trim", "LampHousing": "Trim", "Liner": "Trim", "Underbody": "Trim", "InteriorPlastic": "Trim",
+        "EngineBlack": "Trim"},
+    2: {"Mesh": "Trim", "LampHousing": "Trim", "Liner": "Trim", "Underbody": "Trim", "InteriorPlastic": "Trim",
+        "EngineBlack": "Trim", "BlackGloss": "Trim", "Cladding": "Trim", "Interior": "Trim", "Carbon": "Trim",
+        "Mirror": "Trim", "DisplayGlass": "Trim", "Reflector": "Chrome", "Aluminum": "Chrome", "Badge": "Chrome"},
+}
+LOD_DROP = {2: ("Wordmark",)}
+WHEEL_L2_MAP = {"Sidewall": "Tire", "RimDark": "Rim", "RimLip": "Rim", "LugNut": "Rim", "CenterCap": "Rim"}
 NO_SMOOTH = {"Glass", "LampGlass", "TailGlass", "SmokeGlass", "Plate", "Badge", "Wordmark", "Number", "Livery",
              "Display_Cluster", "Display_Center", "Display_Rear", "Sticker", "Secret", "Label", "Dice", "Gap"}
+
+
+def split_indicator(part, mat="Indicator", right="IndicatorR"):
+    """Blinker der rechten Fahrzeugseite (x < 0) bekommen ein eigenes Material."""
+    tris = part.tris.get(mat)
+    if not tris:
+        return
+    left, rgt = [], []
+    for t in tris:
+        (rgt if (t[0][0] + t[1][0] + t[2][0]) < 0 else left).append(t)
+    part.tris[mat] = left
+    if rgt:
+        part.tris.setdefault(right, []).extend(rgt)
 
 
 # ----------------------------------------------------------------------
@@ -174,6 +198,12 @@ def build_car(spec, out_dir, shared_tex, log=print):
         lods[lod] = build_lod(spec, lod)
     sp0, body0, ctx0 = lods[0]
     bodies = {lod: merged_body(lods[lod][2], "Body_L%d" % lod) for lod in LODS}
+    for lod in LODS:                            # Blinker links/rechts getrennt schaltbar
+        split_indicator(bodies[lod])
+    for lod, mp in LOD_MAT_MAP.items():
+        bodies[lod].recolor(mp)
+        for m in LOD_DROP.get(lod, ()):
+            bodies[lod].tris.pop(m, None)
     log("  Karosserie: " + ", ".join("L%d %d" % (k, bodies[k].count()) for k in LODS) +
         " Dreiecke (%.0fs)" % (time.time() - t0))
 
@@ -269,15 +299,18 @@ def build_car(spec, out_dir, shared_tex, log=print):
             key = (axle, side)
             if key not in cache:
                 cache[key] = {lod: wheel_parts(spec, axle, side, lod) for lod in (0, 1)}
+                w1 = cache[key][1]                  # Ferne: wie L1, aber nur 2 Materialien (Reifen, Felge)
+                cache[key][2] = {"tire": Part("tire_l2").merge(w1["tire"], matmap=WHEEL_L2_MAP),
+                                 "rims": [Part("rim_l2").merge(r, matmap=WHEEL_L2_MAP) for r in w1["rims"]]}
             wp = cache[key]
             pos = tag + lr
             x = side * wheel_x(spec, body0, axle)
             kids = [group("Tire_" + pos, [mesh_node("Tire_%s_L%d" % (pos, lod), wp[lod]["tire"], extras={"lod": lod})
-                                           for lod in (0, 1)]),
+                                           for lod in (0, 1, 2)]),
                     group("Brake_" + pos, [mesh_node("Brake_%s_L0" % pos, wp[0]["brake"], extras={"lod": 0})])]
             for ri in range(len(spec["rims"])):
                 rk = [mesh_node("Rim_%d_%s_L%d" % (ri + 1, pos, lod), wp[lod]["rims"][ri], extras={"lod": lod})
-                      for lod in (0, 1)]
+                      for lod in (0, 1, 2)]
                 kids.append(group("Rim_%d_%s" % (ri + 1, pos), rk, extras={"tune": "rim", "variant": ri + 1}))
             nodes.append(group("Wheel_" + pos, kids, translation=(x, wd["R"], wd["z"]),
                                extras={"wheel": pos, "steer": axle == "front", "radius": wd["R"],

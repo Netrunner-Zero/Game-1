@@ -387,10 +387,13 @@ export class Vehicle {
       const k = p.pedal === 'brake' ? s.brake : s.throttle;
       p.obj.quaternion.copy(p.base).multiply(new THREE.Quaternion().setFromAxisAngle(X, -0.32 * k));
     }
-    // Blinker
-    const blink = s.indicator !== 0 && Math.floor(time * 2.6) % 2 === 0;
-    const ind = this.mat.Indicator;
-    if (ind) ind.emissiveIntensity = blink ? (ind.userData.active || 5.0) : 0;
+    // Blinker: -1 links, 1 rechts, 2 Warnblinker (links = Material Indicator, rechts = IndicatorR)
+    const on = s.indicator !== 0 && Math.floor(time * 2.6) % 2 === 0;
+    const L = this.mat.Indicator, R = this.mat.IndicatorR;
+    const left = on && (s.indicator === -1 || s.indicator === 2 || !R);
+    const right = on && (s.indicator === 1 || s.indicator === 2);
+    if (L) L.emissiveIntensity = left ? (L.userData.active || 5.0) : 0;
+    if (R) R.emissiveIntensity = right ? (R.userData.active || 5.0) : 0;
     this.displays.update(time);
   }
 
