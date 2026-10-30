@@ -1,0 +1,1824 @@
+{
+ "version": 4,
+ "generator": "tools/car-generator",
+ "units": "Meter, +Y oben, +Z vorne, +X links",
+ "sharedTextures": "textures/",
+ "sharedTextureBytes": 640626,
+ "cars": [
+  {
+   "id": "vektra_gt",
+   "name": "Vektra GT",
+   "file": "vektra_gt.glb",
+   "description": "Mittelmotor-Sportwagen mit V8, Heckantrieb, agil und präzise",
+   "class": "Supersportwagen",
+   "brand": "VEKTRA",
+   "defaultPaint": "#c8102e",
+   "defaultAccent": "#00e5ff",
+   "defaultRim": "#1d1f23",
+   "defaultCaliper": "#f0b400",
+   "dimensions": {
+    "length": 4.45,
+    "width": 1.965,
+    "height": 1.154
+   },
+   "wheelbase": 2.7,
+   "wheels": [
+    {
+     "node": "Wheel_FL",
+     "caliper": "Caliper_FL",
+     "position": [
+      0.827,
+      0.33,
+      1.38
+     ],
+     "radius": 0.33,
+     "width": 0.25,
+     "steer": true,
+     "drive": false
+    },
+    {
+     "node": "Wheel_FR",
+     "caliper": "Caliper_FR",
+     "position": [
+      -0.827,
+      0.33,
+      1.38
+     ],
+     "radius": 0.33,
+     "width": 0.25,
+     "steer": true,
+     "drive": false
+    },
+    {
+     "node": "Wheel_RL",
+     "caliper": "Caliper_RL",
+     "position": [
+      0.8141,
+      0.355,
+      -1.32
+     ],
+     "radius": 0.355,
+     "width": 0.31,
+     "steer": false,
+     "drive": true
+    },
+    {
+     "node": "Wheel_RR",
+     "caliper": "Caliper_RR",
+     "position": [
+      -0.8141,
+      0.355,
+      -1.32
+     ],
+     "radius": 0.355,
+     "width": 0.31,
+     "steer": false,
+     "drive": true
+    }
+   ],
+   "stats": {
+    "massKg": 1380,
+    "powerKw": 470,
+    "drive": "RWD",
+    "topSpeedKmh": 325,
+    "grip": 1.1,
+    "suspension": "straff"
+   },
+   "physics": {
+    "massKg": 1380,
+    "cogHeight": 0.42,
+    "weightFront": 0.42,
+    "dragCd": 0.31,
+    "frontalArea": 1.92,
+    "powerKw": 470,
+    "torqueNm": 700,
+    "idleRpm": 950,
+    "redlineRpm": 8500,
+    "gears": [
+     3.13,
+     2.19,
+     1.69,
+     1.35,
+     1.11,
+     0.92,
+     0.76
+    ],
+    "finalDrive": 4.1,
+    "suspension": {
+     "springFront": 54000,
+     "springRear": 61000,
+     "damping": 0.42,
+     "travel": 0.1,
+     "antiRollFront": 0.85,
+     "antiRollRear": 0.7
+    },
+    "tire": {
+     "grip": 1.1,
+     "slipPeak": 0.09
+    },
+    "brakeForce": 1.3,
+    "brakeBias": 0.62,
+    "steerLockDeg": 31
+   },
+   "tuning": {
+    "engine": [
+     {
+      "name": "Serie V8",
+      "powerKw": 470,
+      "torqueNm": 700
+     },
+     {
+      "name": "Carbon-Ansaugung",
+      "powerKw": 500,
+      "torqueNm": 735
+     },
+     {
+      "name": "Biturbo",
+      "powerKw": 560,
+      "torqueNm": 805
+     },
+     {
+      "name": "Race + Dachhutze",
+      "powerKw": 610,
+      "torqueNm": 845
+     }
+    ],
+    "exhaust": [
+     {
+      "name": "Serie",
+      "loudness": 0
+     },
+     {
+      "name": "Sport (4 Rohre)",
+      "loudness": 4
+     },
+     {
+      "name": "Race (Titan, mittig)",
+      "loudness": 8
+     }
+    ],
+    "cage": [
+     {
+      "name": "Kein Käfig"
+     },
+     {
+      "name": "Halbkäfig",
+      "massKg": 16,
+      "stiffness": 1.05
+     },
+     {
+      "name": "Vollkäfig",
+      "massKg": 30,
+      "stiffness": 1.12
+     }
+    ]
+   },
+   "plate": "VK 77",
+   "gauges": {
+    "speedMaxKmh": 340,
+    "rpmMaxThousand": 9,
+    "sweepDeg": 270,
+    "cluster": "digital",
+    "center": "dash",
+    "rearScreens": false
+   },
+   "cockpit": {
+    "eye": [
+     0.33,
+     0.966,
+     -0.225
+    ],
+    "steeringWheel": [
+     0.33,
+     0.666,
+     0.395
+    ],
+    "steeringRatioDeg": 400
+   },
+   "lights": {
+    "head": [
+     [
+      0.6,
+      0.462,
+      2.161
+     ]
+    ],
+    "tail": [
+     [
+      0.585,
+      0.768,
+      -2.131
+     ],
+     [
+      0.0,
+      0.792,
+      -2.126
+     ]
+    ],
+    "fog": [
+     [
+      0.735,
+      0.305,
+      -2.113
+     ]
+    ]
+   },
+   "exhaustOutlets": {
+    "1": [
+     [
+      0.13,
+      0.3,
+      -2.152,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.13,
+      0.3,
+      -2.152,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "2": [
+     [
+      0.2,
+      0.3,
+      -2.152,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      0.31,
+      0.3,
+      -2.152,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.2,
+      0.3,
+      -2.152,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.31,
+      0.3,
+      -2.152,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "3": [
+     [
+      0.085,
+      0.655,
+      -2.19,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.085,
+      0.655,
+      -2.19,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ]
+   },
+   "maxLoweringCm": 3,
+   "defaultTuning": {},
+   "rims": [
+    "Y-Speiche",
+    "Kreuzspeiche",
+    "Turbine"
+   ],
+   "spoilers": [
+    "Lippe",
+    "GT-Flügel",
+    "Cyber-Flügel"
+   ],
+   "liveries": [
+    "Rennstreifen",
+    "Seitenblitz",
+    "Startnummer"
+   ],
+   "triangles": {
+    "L0": 115522,
+    "L1": 23468,
+    "L2": 14420
+   },
+   "fileBytes": 6434540
+  },
+  {
+   "id": "brawler_77",
+   "name": "Brawler 77",
+   "file": "brawler_77.glb",
+   "description": "Muscle Car mit großem V8, viel Drehmoment, neigt zum Driften",
+   "class": "Muscle Car",
+   "brand": "BRAWLER",
+   "defaultPaint": "#f5a300",
+   "defaultAccent": "#ff3b1f",
+   "defaultRim": "#c9ccd2",
+   "defaultCaliper": "#1d1f23",
+   "dimensions": {
+    "length": 4.82,
+    "width": 2.01,
+    "height": 1.321
+   },
+   "wheelbase": 2.92,
+   "wheels": [
+    {
+     "node": "Wheel_FL",
+     "caliper": "Caliper_FL",
+     "position": [
+      0.8415,
+      0.34,
+      1.5
+     ],
+     "radius": 0.34,
+     "width": 0.255,
+     "steer": true,
+     "drive": false
+    },
+    {
+     "node": "Wheel_FR",
+     "caliper": "Caliper_FR",
+     "position": [
+      -0.8415,
+      0.34,
+      1.5
+     ],
+     "radius": 0.34,
+     "width": 0.255,
+     "steer": true,
+     "drive": false
+    },
+    {
+     "node": "Wheel_RL",
+     "caliper": "Caliper_RL",
+     "position": [
+      0.8315,
+      0.355,
+      -1.42
+     ],
+     "radius": 0.355,
+     "width": 0.315,
+     "steer": false,
+     "drive": true
+    },
+    {
+     "node": "Wheel_RR",
+     "caliper": "Caliper_RR",
+     "position": [
+      -0.8315,
+      0.355,
+      -1.42
+     ],
+     "radius": 0.355,
+     "width": 0.315,
+     "steer": false,
+     "drive": true
+    }
+   ],
+   "stats": {
+    "massKg": 1650,
+    "powerKw": 450,
+    "drive": "RWD",
+    "topSpeedKmh": 290,
+    "grip": 0.88,
+    "suspension": "weich"
+   },
+   "physics": {
+    "massKg": 1650,
+    "cogHeight": 0.52,
+    "weightFront": 0.55,
+    "dragCd": 0.42,
+    "frontalArea": 2.15,
+    "powerKw": 450,
+    "torqueNm": 820,
+    "idleRpm": 750,
+    "redlineRpm": 6600,
+    "gears": [
+     2.97,
+     2.07,
+     1.43,
+     1.0,
+     0.84,
+     0.56
+    ],
+    "finalDrive": 3.55,
+    "suspension": {
+     "springFront": 32000,
+     "springRear": 30000,
+     "damping": 0.3,
+     "travel": 0.14,
+     "antiRollFront": 0.6,
+     "antiRollRear": 0.35
+    },
+    "tire": {
+     "grip": 0.88,
+     "slipPeak": 0.11,
+     "rearGripFactor": 0.92
+    },
+    "brakeForce": 1.0,
+    "brakeBias": 0.6,
+    "steerLockDeg": 34
+   },
+   "tuning": {
+    "engine": [
+     {
+      "name": "Serie V8",
+      "powerKw": 450,
+      "torqueNm": 820
+     },
+     {
+      "name": "Ram-Air-Hutze",
+      "powerKw": 480,
+      "torqueNm": 860
+     },
+     {
+      "name": "Kompressor",
+      "powerKw": 580,
+      "torqueNm": 980
+     },
+     {
+      "name": "Shotgun + Lachgas",
+      "powerKw": 660,
+      "torqueNm": 1080
+     }
+    ],
+    "exhaust": [
+     {
+      "name": "Serie (Doppelrohr)",
+      "loudness": 2
+     },
+     {
+      "name": "Sport (4 Rohre)",
+      "loudness": 5
+     },
+     {
+      "name": "Sidepipes",
+      "loudness": 9
+     }
+    ],
+    "cage": [
+     {
+      "name": "Kein Käfig"
+     },
+     {
+      "name": "Halbkäfig",
+      "massKg": 18,
+      "stiffness": 1.06
+     },
+     {
+      "name": "Vollkäfig",
+      "massKg": 34,
+      "stiffness": 1.14
+     }
+    ]
+   },
+   "plate": "BR 1977",
+   "gauges": {
+    "speedMaxKmh": 300,
+    "rpmMaxThousand": 8,
+    "sweepDeg": 270,
+    "cluster": "analog",
+    "center": "retro",
+    "rearScreens": false
+   },
+   "cockpit": {
+    "eye": [
+     0.33,
+     1.164,
+     -0.793
+    ],
+    "steeringWheel": [
+     0.33,
+     0.884,
+     -0.153
+    ],
+    "steeringRatioDeg": 540
+   },
+   "lights": {
+    "head": [
+     [
+      0.7,
+      0.635,
+      2.42
+     ],
+     [
+      0.52,
+      0.635,
+      2.42
+     ]
+    ],
+    "indicator": [
+     [
+      0.58,
+      0.3,
+      2.394
+     ]
+    ],
+    "tail": [
+     [
+      0.56,
+      0.715,
+      -2.4
+     ]
+    ]
+   },
+   "exhaustOutlets": {
+    "1": [
+     [
+      0.6,
+      0.27,
+      -2.396,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.6,
+      0.27,
+      -2.396,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "2": [
+     [
+      0.52,
+      0.27,
+      -2.396,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      0.65,
+      0.27,
+      -2.396,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.52,
+      0.27,
+      -2.396,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.65,
+      0.27,
+      -2.396,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "3": [
+     [
+      0.99,
+      0.27,
+      -0.9,
+      1.0,
+      0.0,
+      0.0
+     ],
+     [
+      -0.99,
+      0.27,
+      -0.9,
+      -1.0,
+      0.0,
+      0.0
+     ]
+    ]
+   },
+   "maxLoweringCm": 5,
+   "defaultTuning": {},
+   "rims": [
+    "Klassik 5-Speiche",
+    "Kreuzspeiche",
+    "Gitter"
+   ],
+   "spoilers": [
+    "Lippe",
+    "GT-Flügel",
+    "Cyber-Flügel"
+   ],
+   "liveries": [
+    "Rennstreifen",
+    "Seitenblitz",
+    "Startnummer"
+   ],
+   "triangles": {
+    "L0": 115031,
+    "L1": 20224,
+    "L2": 10214
+   },
+   "fileBytes": 6031636
+  },
+  {
+   "id": "ion_spectre",
+   "name": "Ion Spectre",
+   "file": "ion_spectre.glb",
+   "description": "Elektro-Hypercar mit vier Motoren, Allrad, extreme Beschleunigung",
+   "class": "Elektro-Hypercar",
+   "brand": "ION",
+   "defaultPaint": "#e9edf3",
+   "defaultAccent": "#ff2bd6",
+   "defaultRim": "#9aa1ab",
+   "defaultCaliper": "#ff2bd6",
+   "dimensions": {
+    "length": 4.68,
+    "width": 2.028,
+    "height": 1.111
+   },
+   "wheelbase": 2.82,
+   "wheels": [
+    {
+     "node": "Wheel_FL",
+     "caliper": "Caliper_FL",
+     "position": [
+      0.846,
+      0.35,
+      1.42
+     ],
+     "radius": 0.35,
+     "width": 0.28,
+     "steer": true,
+     "drive": true
+    },
+    {
+     "node": "Wheel_FR",
+     "caliper": "Caliper_FR",
+     "position": [
+      -0.846,
+      0.35,
+      1.42
+     ],
+     "radius": 0.35,
+     "width": 0.28,
+     "steer": true,
+     "drive": true
+    },
+    {
+     "node": "Wheel_RL",
+     "caliper": "Caliper_RL",
+     "position": [
+      0.846,
+      0.36,
+      -1.4
+     ],
+     "radius": 0.36,
+     "width": 0.32,
+     "steer": false,
+     "drive": true
+    },
+    {
+     "node": "Wheel_RR",
+     "caliper": "Caliper_RR",
+     "position": [
+      -0.846,
+      0.36,
+      -1.4
+     ],
+     "radius": 0.36,
+     "width": 0.32,
+     "steer": false,
+     "drive": true
+    }
+   ],
+   "stats": {
+    "massKg": 1850,
+    "powerKw": 1100,
+    "drive": "AWD",
+    "topSpeedKmh": 350,
+    "grip": 1.2,
+    "suspension": "adaptiv"
+   },
+   "physics": {
+    "massKg": 1850,
+    "cogHeight": 0.38,
+    "weightFront": 0.46,
+    "dragCd": 0.28,
+    "frontalArea": 1.98,
+    "powerKw": 1100,
+    "torqueNm": 2300,
+    "idleRpm": 0,
+    "redlineRpm": 20000,
+    "electric": true,
+    "gears": [
+     1.0
+    ],
+    "finalDrive": 8.2,
+    "suspension": {
+     "springFront": 50000,
+     "springRear": 56000,
+     "damping": 0.45,
+     "travel": 0.11,
+     "antiRollFront": 0.8,
+     "antiRollRear": 0.75,
+     "adaptive": true
+    },
+    "tire": {
+     "grip": 1.2,
+     "slipPeak": 0.09
+    },
+    "brakeForce": 1.4,
+    "brakeBias": 0.58,
+    "steerLockDeg": 30,
+    "torqueVectoring": true
+   },
+   "tuning": {
+    "engine": [
+     {
+      "name": "Serie (4 Motoren)",
+      "powerKw": 1100,
+      "torqueNm": 2300
+     },
+     {
+      "name": "Overboost",
+      "powerKw": 1250,
+      "torqueNm": 2450
+     },
+     {
+      "name": "Track-Paket",
+      "powerKw": 1350,
+      "torqueNm": 2550
+     },
+     {
+      "name": "Hyper-Modus",
+      "powerKw": 1500,
+      "torqueNm": 2700
+     }
+    ],
+    "exhaust": [
+     {
+      "name": "Lautlos",
+      "loudness": 0
+     },
+     {
+      "name": "Sound-Modul Synth",
+      "loudness": 3
+     },
+     {
+      "name": "Sound-Modul Turbine",
+      "loudness": 5
+     }
+    ],
+    "cage": [
+     {
+      "name": "Kein Käfig"
+     },
+     {
+      "name": "Halbkäfig",
+      "massKg": 15,
+      "stiffness": 1.04
+     },
+     {
+      "name": "Vollkäfig",
+      "massKg": 28,
+      "stiffness": 1.1
+     }
+    ]
+   },
+   "plate": "E 2077",
+   "gauges": {
+    "speedMaxKmh": 400,
+    "rpmMaxThousand": 20,
+    "sweepDeg": 270,
+    "cluster": "digital",
+    "center": "floating",
+    "rearScreens": false
+   },
+   "cockpit": {
+    "eye": [
+     0.33,
+     0.9,
+     -0.303
+    ],
+    "steeringWheel": [
+     0.33,
+     0.6,
+     0.317
+    ],
+    "steeringRatioDeg": 360
+   },
+   "lights": {
+    "head": [
+     [
+      0.64,
+      0.415,
+      2.254
+     ]
+    ],
+    "drl": [
+     [
+      0.0,
+      0.392,
+      2.289
+     ]
+    ],
+    "tail": [
+     [
+      0.0,
+      0.69,
+      -2.308
+     ]
+    ]
+   },
+   "exhaustOutlets": {},
+   "maxLoweringCm": 4,
+   "defaultTuning": {},
+   "rims": [
+    "Aero-Turbine",
+    "Vielspeiche",
+    "Y-Speiche"
+   ],
+   "spoilers": [
+    "Lippe",
+    "GT-Flügel",
+    "Cyber-Flügel"
+   ],
+   "liveries": [
+    "Rennstreifen",
+    "Seitenblitz",
+    "Startnummer"
+   ],
+   "triangles": {
+    "L0": 106301,
+    "L1": 20864,
+    "L2": 11880
+   },
+   "fileBytes": 5899284
+  },
+  {
+   "id": "rhino_x",
+   "name": "Rhino X",
+   "file": "rhino_x.glb",
+   "description": "Schwerer Offroad-SUV mit Allrad, Starrachsen und viel Bodenfreiheit",
+   "class": "Geländewagen",
+   "brand": "RHINO",
+   "defaultPaint": "#3d4a3e",
+   "defaultAccent": "#ff8a00",
+   "defaultRim": "#2a2c30",
+   "defaultCaliper": "#ff8a00",
+   "dimensions": {
+    "length": 4.76,
+    "width": 1.999,
+    "height": 1.901
+   },
+   "wheelbase": 2.9,
+   "wheels": [
+    {
+     "node": "Wheel_FL",
+     "caliper": "Caliper_FL",
+     "position": [
+      0.885,
+      0.42,
+      1.45
+     ],
+     "radius": 0.42,
+     "width": 0.3,
+     "steer": true,
+     "drive": true
+    },
+    {
+     "node": "Wheel_FR",
+     "caliper": "Caliper_FR",
+     "position": [
+      -0.885,
+      0.42,
+      1.45
+     ],
+     "radius": 0.42,
+     "width": 0.3,
+     "steer": true,
+     "drive": true
+    },
+    {
+     "node": "Wheel_RL",
+     "caliper": "Caliper_RL",
+     "position": [
+      0.885,
+      0.42,
+      -1.45
+     ],
+     "radius": 0.42,
+     "width": 0.3,
+     "steer": false,
+     "drive": true
+    },
+    {
+     "node": "Wheel_RR",
+     "caliper": "Caliper_RR",
+     "position": [
+      -0.885,
+      0.42,
+      -1.45
+     ],
+     "radius": 0.42,
+     "width": 0.3,
+     "steer": false,
+     "drive": true
+    }
+   ],
+   "stats": {
+    "massKg": 2400,
+    "powerKw": 330,
+    "drive": "AWD",
+    "topSpeedKmh": 220,
+    "grip": 0.95,
+    "suspension": "lang, weich"
+   },
+   "physics": {
+    "massKg": 2400,
+    "cogHeight": 0.8,
+    "weightFront": 0.52,
+    "dragCd": 0.5,
+    "frontalArea": 3.2,
+    "powerKw": 330,
+    "torqueNm": 700,
+    "idleRpm": 700,
+    "redlineRpm": 6200,
+    "gears": [
+     4.7,
+     3.14,
+     2.11,
+     1.67,
+     1.29,
+     1.0,
+     0.84,
+     0.67
+    ],
+    "finalDrive": 3.9,
+    "lowRange": 2.7,
+    "suspension": {
+     "springFront": 42000,
+     "springRear": 46000,
+     "damping": 0.35,
+     "travel": 0.26,
+     "antiRollFront": 0.4,
+     "antiRollRear": 0.35
+    },
+    "tire": {
+     "grip": 0.95,
+     "slipPeak": 0.12,
+     "offroadGrip": 1.25
+    },
+    "brakeForce": 0.95,
+    "brakeBias": 0.62,
+    "steerLockDeg": 36,
+    "groundClearance": 0.27
+   },
+   "tuning": {
+    "engine": [
+     {
+      "name": "Serie V8",
+      "powerKw": 330,
+      "torqueNm": 700
+     },
+     {
+      "name": "Schnorchel + Luftfilter",
+      "powerKw": 345,
+      "torqueNm": 730
+     },
+     {
+      "name": "Biturbo + Ladeluftkühler",
+      "powerKw": 420,
+      "torqueNm": 850
+     },
+     {
+      "name": "Expedition (Bügel, Winde, LED)",
+      "powerKw": 440,
+      "torqueNm": 880
+     }
+    ],
+    "exhaust": [
+     {
+      "name": "Serie",
+      "loudness": 1
+     },
+     {
+      "name": "Doppelrohr Sport",
+      "loudness": 4
+     },
+     {
+      "name": "Hochauspuff (Wattiefe)",
+      "loudness": 6
+     }
+    ],
+    "cage": [
+     {
+      "name": "Kein Käfig"
+     },
+     {
+      "name": "Halbkäfig",
+      "massKg": 22,
+      "stiffness": 1.05
+     },
+     {
+      "name": "Vollkäfig",
+      "massKg": 40,
+      "stiffness": 1.12
+     }
+    ]
+   },
+   "plate": "RX 404",
+   "gauges": {
+    "speedMaxKmh": 260,
+    "rpmMaxThousand": 7,
+    "sweepDeg": 270,
+    "cluster": "digital",
+    "center": "dash",
+    "rearScreens": false
+   },
+   "cockpit": {
+    "eye": [
+     0.4,
+     1.644,
+     -0.613
+    ],
+    "steeringWheel": [
+     0.4,
+     1.154,
+     0.067
+    ],
+    "steeringRatioDeg": 560
+   },
+   "lights": {
+    "head": [
+     [
+      0.68,
+      0.85,
+      2.38
+     ]
+    ],
+    "indicator": [
+     [
+      0.68,
+      0.7,
+      2.38
+     ]
+    ],
+    "tail": [
+     [
+      0.86,
+      0.95,
+      -2.38
+     ]
+    ]
+   },
+   "exhaustOutlets": {
+    "1": [
+     [
+      -0.62,
+      0.395,
+      -2.43,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "2": [
+     [
+      0.62,
+      0.392,
+      -2.44,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.62,
+      0.392,
+      -2.44,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "3": [
+     [
+      -0.969,
+      1.899,
+      -2.377,
+      0.0,
+      0.5,
+      -0.866
+     ]
+    ]
+   },
+   "maxLoweringCm": 6,
+   "defaultTuning": {},
+   "rims": [
+    "Beadlock",
+    "Gelände 5",
+    "Y-Speiche"
+   ],
+   "spoilers": [
+    "Dachkante",
+    "Dachflügel",
+    "Cyber-Dachflügel"
+   ],
+   "liveries": [
+    "Rennstreifen",
+    "Seitenblitz",
+    "Startnummer"
+   ],
+   "triangles": {
+    "L0": 129080,
+    "L1": 24155,
+    "L2": 12127
+   },
+   "fileBytes": 6869020
+  },
+  {
+   "id": "pulse",
+   "name": "Pulse",
+   "file": "pulse.glb",
+   "description": "Kompaktsportler mit Turbo und Frontantrieb, leicht, wendig und frech",
+   "class": "Hot Hatch",
+   "brand": "PULSE",
+   "defaultPaint": "#1f6fff",
+   "defaultAccent": "#b6ff00",
+   "defaultRim": "#1d1f23",
+   "defaultCaliper": "#b6ff00",
+   "dimensions": {
+    "length": 4.308,
+    "width": 1.865,
+    "height": 1.456
+   },
+   "wheelbase": 2.54,
+   "wheels": [
+    {
+     "node": "Wheel_FL",
+     "caliper": "Caliper_FL",
+     "position": [
+      0.7985,
+      0.33,
+      1.3
+     ],
+     "radius": 0.33,
+     "width": 0.235,
+     "steer": true,
+     "drive": true
+    },
+    {
+     "node": "Wheel_FR",
+     "caliper": "Caliper_FR",
+     "position": [
+      -0.7985,
+      0.33,
+      1.3
+     ],
+     "radius": 0.33,
+     "width": 0.235,
+     "steer": true,
+     "drive": true
+    },
+    {
+     "node": "Wheel_RL",
+     "caliper": "Caliper_RL",
+     "position": [
+      0.8085,
+      0.33,
+      -1.24
+     ],
+     "radius": 0.33,
+     "width": 0.235,
+     "steer": false,
+     "drive": false
+    },
+    {
+     "node": "Wheel_RR",
+     "caliper": "Caliper_RR",
+     "position": [
+      -0.8085,
+      0.33,
+      -1.24
+     ],
+     "radius": 0.33,
+     "width": 0.235,
+     "steer": false,
+     "drive": false
+    }
+   ],
+   "stats": {
+    "massKg": 1250,
+    "powerKw": 235,
+    "drive": "FWD",
+    "topSpeedKmh": 265,
+    "grip": 1.0,
+    "suspension": "straff"
+   },
+   "physics": {
+    "massKg": 1250,
+    "cogHeight": 0.5,
+    "weightFront": 0.62,
+    "dragCd": 0.32,
+    "frontalArea": 2.2,
+    "powerKw": 235,
+    "torqueNm": 420,
+    "idleRpm": 850,
+    "redlineRpm": 7000,
+    "gears": [
+     3.36,
+     2.09,
+     1.47,
+     1.1,
+     0.87,
+     0.71
+    ],
+    "finalDrive": 4.2,
+    "manual": true,
+    "suspension": {
+     "springFront": 46000,
+     "springRear": 38000,
+     "damping": 0.4,
+     "travel": 0.12,
+     "antiRollFront": 0.7,
+     "antiRollRear": 0.8
+    },
+    "tire": {
+     "grip": 1.0,
+     "slipPeak": 0.1
+    },
+    "brakeForce": 1.1,
+    "brakeBias": 0.66,
+    "steerLockDeg": 35,
+    "frontDiffLock": 0.35,
+    "torqueSteer": 0.12
+   },
+   "tuning": {
+    "engine": [
+     {
+      "name": "Serie 2.0 Turbo",
+      "powerKw": 235,
+      "torqueNm": 420
+     },
+     {
+      "name": "Kaltluft + Haubenschlitze",
+      "powerKw": 250,
+      "torqueNm": 450
+     },
+     {
+      "name": "Großer Turbo + Ladeluftkühler",
+      "powerKw": 290,
+      "torqueNm": 520
+     },
+     {
+      "name": "Rallye-Paket (Dachhutze, Zusatzlicht, Schmutzfänger)",
+      "powerKw": 315,
+      "torqueNm": 560
+     }
+    ],
+    "exhaust": [
+     {
+      "name": "Serie (2 Rohre)",
+      "loudness": 2
+     },
+     {
+      "name": "Sport (4 Rohre)",
+      "loudness": 5
+     },
+     {
+      "name": "Mittig (3 Rohre)",
+      "loudness": 8
+     }
+    ],
+    "cage": [
+     {
+      "name": "Kein Käfig"
+     },
+     {
+      "name": "Halbkäfig",
+      "massKg": 15,
+      "stiffness": 1.06
+     },
+     {
+      "name": "Vollkäfig",
+      "massKg": 28,
+      "stiffness": 1.14
+     }
+    ]
+   },
+   "plate": "PL 2049",
+   "gauges": {
+    "speedMaxKmh": 300,
+    "rpmMaxThousand": 8,
+    "sweepDeg": 270,
+    "cluster": "digital",
+    "center": "floating",
+    "rearScreens": false
+   },
+   "cockpit": {
+    "eye": [
+     0.36,
+     1.211,
+     -0.533
+    ],
+    "steeringWheel": [
+     0.36,
+     0.851,
+     0.087
+    ],
+    "steeringRatioDeg": 460
+   },
+   "lights": {
+    "head": [
+     [
+      0.62,
+      0.645,
+      2.222
+     ]
+    ],
+    "drl": [
+     [
+      0.0,
+      0.645,
+      2.223
+     ]
+    ],
+    "fog": [
+     [
+      0.69,
+      0.47,
+      2.234
+     ]
+    ],
+    "tail": [
+     [
+      0.6,
+      0.845,
+      -2.017
+     ],
+     [
+      0.0,
+      0.85,
+      -2.016
+     ]
+    ],
+    "marker": [
+     [
+      0.72,
+      0.42,
+      -2.046
+     ]
+    ]
+   },
+   "exhaustOutlets": {
+    "1": [
+     [
+      0.52,
+      0.33,
+      -2.069,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.52,
+      0.33,
+      -2.069,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "2": [
+     [
+      0.46,
+      0.33,
+      -2.069,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      0.575,
+      0.33,
+      -2.068,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.46,
+      0.33,
+      -2.069,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.575,
+      0.33,
+      -2.068,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "3": [
+     [
+      0.105,
+      0.33,
+      -2.069,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      0.0,
+      0.33,
+      -2.069,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.105,
+      0.33,
+      -2.069,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ]
+   },
+   "maxLoweringCm": 4,
+   "defaultTuning": {
+    "spoiler": 1
+   },
+   "rims": [
+    "Y-Speiche",
+    "Kreuzspeiche",
+    "Rallye 5"
+   ],
+   "spoilers": [
+    "Dachspoiler",
+    "Rallye-Dachflügel",
+    "Cyber-Dachflügel"
+   ],
+   "liveries": [
+    "Rennstreifen",
+    "Seitenblitz",
+    "Startnummer"
+   ],
+   "triangles": {
+    "L0": 116770,
+    "L1": 20278,
+    "L2": 11892
+   },
+   "fileBytes": 6192108
+  },
+  {
+   "id": "aurelion_s",
+   "name": "Aurelion S",
+   "file": "aurelion_s.glb",
+   "description": "Luxuslimousine mit langem Radstand, V12 Biturbo und Luftfederung – ruhig, schwer, kraftvoll",
+   "class": "Luxuslimousine",
+   "brand": "AURELION",
+   "defaultPaint": "#c7c1b4",
+   "defaultAccent": "#d9b46a",
+   "defaultRim": "#c9ccd2",
+   "defaultCaliper": "#2f3238",
+   "dimensions": {
+    "length": 5.3,
+    "width": 1.946,
+    "height": 1.511
+   },
+   "wheelbase": 3.2,
+   "wheels": [
+    {
+     "node": "Wheel_FL",
+     "caliper": "Caliper_FL",
+     "position": [
+      0.8355,
+      0.385,
+      1.66
+     ],
+     "radius": 0.385,
+     "width": 0.255,
+     "steer": true,
+     "drive": false
+    },
+    {
+     "node": "Wheel_FR",
+     "caliper": "Caliper_FR",
+     "position": [
+      -0.8355,
+      0.385,
+      1.66
+     ],
+     "radius": 0.385,
+     "width": 0.255,
+     "steer": true,
+     "drive": false
+    },
+    {
+     "node": "Wheel_RL",
+     "caliper": "Caliper_RL",
+     "position": [
+      0.8205,
+      0.385,
+      -1.54
+     ],
+     "radius": 0.385,
+     "width": 0.285,
+     "steer": false,
+     "drive": true
+    },
+    {
+     "node": "Wheel_RR",
+     "caliper": "Caliper_RR",
+     "position": [
+      -0.8205,
+      0.385,
+      -1.54
+     ],
+     "radius": 0.385,
+     "width": 0.285,
+     "steer": false,
+     "drive": true
+    }
+   ],
+   "stats": {
+    "massKg": 2350,
+    "powerKw": 450,
+    "drive": "RWD",
+    "topSpeedKmh": 250,
+    "grip": 0.92,
+    "suspension": "Luftfederung, weich"
+   },
+   "physics": {
+    "massKg": 2350,
+    "cogHeight": 0.55,
+    "weightFront": 0.52,
+    "dragCd": 0.27,
+    "frontalArea": 2.45,
+    "powerKw": 450,
+    "torqueNm": 900,
+    "idleRpm": 650,
+    "redlineRpm": 6200,
+    "gears": [
+     5.35,
+     3.24,
+     2.25,
+     1.64,
+     1.21,
+     1.0,
+     0.86,
+     0.72,
+     0.6
+    ],
+    "finalDrive": 2.65,
+    "suspension": {
+     "springFront": 36000,
+     "springRear": 38000,
+     "damping": 0.24,
+     "travel": 0.14,
+     "antiRollFront": 0.5,
+     "antiRollRear": 0.4,
+     "air": true
+    },
+    "tire": {
+     "grip": 0.92,
+     "slipPeak": 0.1
+    },
+    "brakeForce": 1.05,
+    "brakeBias": 0.6,
+    "steerLockDeg": 33,
+    "speedLimiterKmh": 250
+   },
+   "tuning": {
+    "engine": [
+     {
+      "name": "Serie V12 Biturbo",
+      "powerKw": 450,
+      "torqueNm": 900
+     },
+     {
+      "name": "Sportansaugung",
+      "powerKw": 470,
+      "torqueNm": 940
+     },
+     {
+      "name": "Ladedruck + Ladeluftkühler",
+      "powerKw": 520,
+      "torqueNm": 1000
+     },
+     {
+      "name": "Black-Badge-Paket (Carbon-Aero)",
+      "powerKw": 560,
+      "torqueNm": 1050
+     }
+    ],
+    "exhaust": [
+     {
+      "name": "Serie (verdeckt)",
+      "loudness": 0
+     },
+     {
+      "name": "Sport (4 ovale Rohre)",
+      "loudness": 3
+     },
+     {
+      "name": "Black Badge (4 Rohre)",
+      "loudness": 6
+     }
+    ],
+    "cage": [
+     {
+      "name": "Kein Käfig"
+     },
+     {
+      "name": "Halbkäfig",
+      "massKg": 18,
+      "stiffness": 1.04
+     },
+     {
+      "name": "Vollkäfig",
+      "massKg": 34,
+      "stiffness": 1.1
+     }
+    ]
+   },
+   "plate": "AU 1",
+   "gauges": {
+    "speedMaxKmh": 280,
+    "rpmMaxThousand": 7,
+    "sweepDeg": 270,
+    "cluster": "digital",
+    "center": "dash",
+    "rearScreens": true
+   },
+   "cockpit": {
+    "eye": [
+     0.4,
+     1.341,
+     -0.322
+    ],
+    "steeringWheel": [
+     0.4,
+     0.981,
+     0.318
+    ],
+    "steeringRatioDeg": 480
+   },
+   "lights": {
+    "head": [
+     [
+      0.665,
+      0.83,
+      2.656
+     ]
+    ],
+    "tail": [
+     [
+      0.62,
+      0.88,
+      -2.593
+     ]
+    ],
+    "marker": [
+     [
+      0.72,
+      0.5,
+      -2.592
+     ]
+    ]
+   },
+   "exhaustOutlets": {
+    "1": [
+     [
+      0.62,
+      0.36,
+      -2.609,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.62,
+      0.36,
+      -2.609,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "2": [
+     [
+      0.55,
+      0.36,
+      -2.632,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      0.67,
+      0.36,
+      -2.606,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.55,
+      0.36,
+      -2.632,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.67,
+      0.36,
+      -2.606,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ],
+    "3": [
+     [
+      0.54,
+      0.36,
+      -2.632,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      0.66,
+      0.36,
+      -2.606,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.54,
+      0.36,
+      -2.632,
+      0.0,
+      0.0,
+      -1.0
+     ],
+     [
+      -0.66,
+      0.36,
+      -2.606,
+      0.0,
+      0.0,
+      -1.0
+     ]
+    ]
+   },
+   "maxLoweringCm": 5,
+   "defaultTuning": {
+    "roofColor": "#1b2a3a"
+   },
+   "rims": [
+    "Feinspeiche",
+    "Klassik-Scheibe",
+    "Kreuzspeiche"
+   ],
+   "spoilers": [
+    "Abrisskante",
+    "Heckflügel",
+    "Cyber-Flügel"
+   ],
+   "liveries": [
+    "Rennstreifen",
+    "Seitenblitz",
+    "Startnummer"
+   ],
+   "triangles": {
+    "L0": 120109,
+    "L1": 18678,
+    "L2": 10968
+   },
+   "fileBytes": 6101144
+  }
+ ]
+}

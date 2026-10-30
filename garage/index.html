@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Neon Haven – Garage</title>
+  <meta name="theme-color" content="#07080c">
+  <link rel="stylesheet" href="garage.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <canvas id="view"></canvas>
+
+  <header class="topbar">
+    <div class="brand"><span class="logo">NEON HAVEN</span><span class="sub">GARAGE</span></div>
+    <div class="carname"><div id="carTitle">–</div><div id="carClass" class="muted">Fahrzeuge werden geladen …</div></div>
+    <div class="actions">
+      <button id="btnNight" class="icon" title="Tag / Nacht" aria-label="Tag oder Nacht">☾</button>
+      <button id="btnCam" class="icon wide" title="Kamera wechseln" aria-label="Kamera wechseln">Außen</button>
+      <button id="btnSettings" class="icon" title="Einstellungen" aria-label="Einstellungen">⚙</button>
+    </div>
+  </header>
+
+  <div id="perf" class="perf hidden"></div>
+
+  <nav id="carList" class="carlist" aria-label="Fahrzeugauswahl"></nav>
+
+  <aside id="tuning" class="panel tuning">
+    <div class="panel-head">
+      <span>TUNING</span>
+      <button id="btnTuneToggle" class="link" aria-label="Tuning ein-/ausklappen">▾</button>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="paint">Lack</button>
+      <button class="tab" data-tab="wheels">Felgen</button>
+      <button class="tab" data-tab="aero">Aero</button>
+      <button class="tab" data-tab="engine">Motor</button>
+      <button class="tab" data-tab="interior">Innen</button>
+    </div>
+    <div class="tab-body" id="tabBody"></div>
+  </aside>
+
+  <section id="demo" class="panel demo">
+    <div class="stats" id="stats"></div>
+    <div class="controls">
+      <label class="ctl"><span>Lenkung</span><input id="inSteer" type="range" min="-1" max="1" step="0.01" value="0"></label>
+      <label class="ctl"><span>Gas</span><input id="inThrottle" type="range" min="0" max="1" step="0.01" value="0"></label>
+      <button id="btnBrake" class="chip">Bremse</button>
+      <button id="btnLights" class="chip">Licht</button>
+      <button id="btnIndL" class="chip">◀</button>
+      <button id="btnIndR" class="chip">▶</button>
+      <button id="btnSpin" class="chip active">Drehteller</button>
+    </div>
+  </section>
+
+  <div id="loading" class="loading"><div class="bar"><div id="loadBar"></div></div><div id="loadText">Lade …</div></div>
+
+  <dialog id="settings" class="dialog">
+    <form method="dialog">
+      <h2>Einstellungen</h2>
+      <label class="row"><span>Innenraumbeleuchtung <b id="vInterior"></b></span>
+        <input id="sInterior" type="range" min="0" max="100" step="1"></label>
+      <p class="hint">0 % = komplett aus. Standard ist bewusst dezent (25 %), damit nichts blendet.</p>
+      <label class="row"><span>Displays &amp; Instrumente <b id="vDisplay"></b></span>
+        <input id="sDisplay" type="range" min="0" max="100" step="1"></label>
+      <label class="row"><span>Belichtung <b id="vExposure"></b></span>
+        <input id="sExposure" type="range" min="50" max="160" step="1"></label>
+      <label class="row"><span>Grafikqualität</span>
+        <select id="sQuality">
+          <option value="auto">Automatisch</option>
+          <option value="low">Niedrig</option>
+          <option value="medium">Mittel</option>
+          <option value="high">Hoch</option>
+        </select></label>
+      <label class="row"><span>Detailstufe (LOD)</span>
+        <select id="sLod">
+          <option value="auto">Automatisch (nach Entfernung)</option>
+          <option value="0">Immer volle Details (LOD 0)</option>
+          <option value="1">Mittel (LOD 1)</option>
+          <option value="2">Fern (LOD 2)</option>
+        </select></label>
+      <label class="row check"><input id="sBloom" type="checkbox"><span>Leuchteffekt (Bloom)</span></label>
+      <label class="row check"><input id="sFps" type="checkbox"><span>Leistungsanzeige (FPS)</span></label>
+      <div class="buttons">
+        <button id="btnPerfTest" type="button" class="chip">Leistungstest (12 Autos)</button>
+        <button id="btnReset" type="button" class="chip">Zurücksetzen</button>
+        <button value="close" class="chip primary">Fertig</button>
+      </div>
+      <p id="perfResult" class="hint"></p>
+    </form>
+  </dialog>
+
+  <script type="module" src="garage.js"></script>
+</body>
+</html>
